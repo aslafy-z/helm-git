@@ -1,0 +1,9 @@
+name: "helm-git"
+version: "0.1.0"
+description: |-
+  Get charts from Git, even if non-packaged.
+downloaders:
+- command: "git.sh"
+  protocols:
+    - "git+ssh"
+    - "git+https"
