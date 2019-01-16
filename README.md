@@ -68,6 +68,11 @@ As this plugin uses `git` CLI to clone repos. You can configure private access i
 
 Contributions are welcome! Please see [these instructions](.github/CONTRIBUTING.md) that will help you to develop the plugin.
 
+## Alternatives
+
+- https://github.com/diwakar-s-maurya/helm-git
+- https://github.com/sagansystems/helm-github
+
 ## License
 
 [MIT](LICENSE)
