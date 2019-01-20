@@ -1,0 +1,200 @@
+#!/usr/bin/env sh
+
+# https://github.com/aslafy-z/helm-git
+# See Helm plugins documentation: https://docs.helm.sh/using_helm/#downloader-plugins
+
+set -e
+
+readonly allowed_protocols="https http file ssh"
+readonly url_prefix="git+"
+
+## Tooling
+
+string_starts() { [ "$(echo "$1" | cut -c 1-${#2})" = "$2" ]; }
+string_ends() { [ "$(echo "$1" | cut -c $((${#1}-${#2}+1))-${#1})" = "$2" ]; }
+string_contains() { echo "$1" | grep -q "$2"; }
+path_join() { echo "${1:+$1/}$2" | sed 's#//#/#g'; }
+
+## Error handling
+
+error() {
+  echo "Error in plugin 'helm-git': $*" >&2
+  exit 1
+}
+
+readonly error_invalid_prefix="Git url should start with '$url_prefix'. Please check helm-git usage."
+readonly error_invalid_protocol="Protocol not allowed, it should match one of theses: $allowed_protocols."
+
+## Temporary folders
+
+readonly stashdir_list_file=$(mktemp)
+stashdir_clean_skip=1
+
+# stashdir_new(comment)
+stashdir_new() {
+  _comment="$1"
+
+  new_dir=$(mktemp -d)
+  echo "$new_dir" >> "$stashdir_list_file"
+  echo "$new_dir"
+  echo "stashdir_new: $_comment ($new_dir)" >&2
+}
+
+# stashdir_clean()
+stashdir_clean() {
+  [ "$stashdir_clean_skip" -eq "1" ] && return 0
+  xargs rm -rf < "$stashdir_list_file" >&2
+  rm -f "$stashdir_list_file" >&2
+}
+
+trap stashdir_clean EXIT
+
+## Functions
+
+# git_try(git_repo)
+git_try() {
+  _git_repo=$1
+
+  GIT_TERMINAL_PROMPT=0 git ls-remote "$_git_repo" --refs >&2 || return 1
+
+}
+
+# git_sparse_checkout(target_path, git_repo, git_ref, git_path)
+git_sparse_checkout() {
+  _target_path=$1
+  _git_repo=$2
+  _git_ref=$3
+  _git_path=$4
+  
+  cd "$_target_path" >&2
+  git init --quiet
+  git config core.sparseCheckout true
+  git remote add origin "$_git_repo" >&2
+  [ -n "$_git_path" ] && echo "$_git_path/*" > .git/info/sparse-checkout
+  git pull --depth=1 origin "$_git_ref" >&2
+  [ -d "$(path_join "./" "$_git_path")" ] || return 1
+}
+
+# helm_init()
+helm_init() {
+  # TODO: Use existing home (helm home)
+
+  HELM_HOME=$(stashdir_new "helm home")
+  helm init --client-only --home "$HELM_HOME" >&2
+  export HELM_HOME
+}
+
+# helm_package(target_path, source_path, chart_name)
+helm_package() {
+  _target_path=$1
+  _source_path=$2
+  _chart_name=$3
+
+  tmp_target=$(stashdir_new "helm_package '$_source_path'")
+  cp -r "$_source_path" "$tmp_target/$_chart_name"
+  _source_path="$tmp_target/$_chart_name"
+  cd "$_target_path" >&2
+
+  helm package --save=false "$_source_path" >&2
+}
+
+# helm_dep_update(target_path)
+helm_dep_update() {
+  _target_path=$1
+
+  helm dependency update --skip-refresh "$_target_path" >&2
+}
+
+# helm_index(target_path, base_url)
+helm_index() {
+  _target_path=$1
+  _base_url=$2
+
+  helm repo index --url="$_base_url" "$_target_path" >&2
+}
+
+# helm_inspect_name(source_path)
+helm_inspect_name() {
+  _source_path=$1
+
+  helm inspect chart "$_source_path" | grep -e '^name: ' | cut -d' ' -f2
+}
+
+## URI Parsing
+
+# git+https://github.com/jetstack/cert-manager#release-0.5/contrib/charts/index.yaml
+
+readonly uri=$4 
+
+string_starts "$uri" "$url_prefix" || \
+  error "Invalid format, got '$uri'. $error_invalid_prefix"
+
+readonly git_proto=$(echo "$uri" | cut -d+ -f2 | cut -d: -f1 | awk '{print$1}')
+
+string_contains "$allowed_protocols" "$git_proto" || \
+  error "$error_invalid_protocol"
+
+readonly git_repo=$(echo "$uri" | sed -e "s/^git+//" | cut -d'@' -f1) 
+# TODO: Validate git_repo
+
+readonly git_ref=$(echo "$uri" | rev | cut -d'@' -f1 | rev | cut -d'/' -f1) 
+# TODO: Validate git_ref
+
+readonly git_path=$(echo "$uri" | rev | cut -d'@' -f1 | rev | cut -d '/' -f2- | rev | cut -s -d'/' -f2- | rev) 
+# TODO: Validate git_path
+
+readonly helm_file=$(echo "$uri" | rev | cut -d':' -f1 | cut -d'/' -f1 | rev) 
+
+readonly clean_uri="git+$git_repo@$git_ref/$git_path"
+
+echo ">>>> repo:$git_repo ref:$git_ref path:$git_path file:$helm_file" >&2
+echo ">>>> url: $clean_uri" >&2
+
+# helm_git_plugin(entry_uri)
+helm_git_plugin() {
+  readonly entry_uri=$1
+
+  readonly git_root_path=$(stashdir_new "git_root_path")
+  readonly git_sub_path=$(path_join "$git_root_path" "$git_path")
+
+  git_sparse_checkout "$git_root_path" "$git_repo" "$git_ref" "$git_path" || \
+    error "Error while git_sparse_checkout"
+
+  # cp -r name-tests/* "$git_root_path"
+
+  readonly helm_target_path=$(stashdir_new "helm_target_path")
+  readonly helm_target_file="$(path_join "$helm_target_path" "$helm_file")"
+
+  # [ -z "$HELM_HOME" ] && helm_init || \
+  #   error "Couldn't init helm"
+
+  chart_search_root="$git_sub_path"
+  chart_search=$(find "$chart_search_root" -maxdepth 2 -name "Chart.yaml" -print)
+  chart_search_count=$(echo "$chart_search" | wc -l)
+
+  echo "$chart_search" | {
+    while IFS='' read -r chart_yaml_file; do
+      chart_path=$(dirname "$chart_yaml_file")
+      chart_name=$(helm_inspect_name "$chart_path")
+
+      helm_dep_update "$chart_path" || \
+        error "Error while helm_dep_update"
+      helm_package "$helm_target_path" "$chart_path" "$chart_name" || \
+        error "Error while helm_package"
+    done
+  }
+
+  [ "$chart_search_count" -eq "0" ] && \
+    error "No charts have been found" 
+
+  helm_index "$helm_target_path" "$entry_uri" || \
+    error "Error while helm_index"
+
+  ls -la "$helm_target_path" >&2
+
+  cat "$helm_target_file"
+
+  exit 0
+}
+
+helm_git_plugin "$clean_uri"
