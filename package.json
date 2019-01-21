@@ -1,0 +1,26 @@
+{
+  "name": "helm-git",
+  "version": "0.2.0",
+  "description": "npm tooling for helm-git Helm downloader plugin",
+  "scripts": {
+    "test": "bats tests/*-*.bats",
+    "test:e2e": "bats tests/e2e.bats",
+    "test:ci": "bats tests/*.bats | tap-xunit",
+    "lint": "shellcheck helm-git *.sh tests/*.bash"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/aslafy-z/helm-git.git"
+  },
+  "author": "Zadkiel <hello@zadkiel.fr>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/aslafy-z/helm-git/issues"
+  },
+  "homepage": "https://github.com/aslafy-z/helm-git#readme",
+  "devDependencies": {
+    "bats": "^1.1.0",
+    "shellcheck": "^0.1.0",
+    "tap-xunit": "^2.3.0"
+  }
+}

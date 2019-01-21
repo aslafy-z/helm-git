@@ -1,0 +1,40 @@
+version: 2
+
+jobs:
+  test:
+    docker:
+      - image: alpine/helm:2.12.2
+
+    steps:
+      - checkout
+
+      - run:
+          name: Setup ENV
+          command: |
+            apk add --no-cache \
+              bash \
+              npm \
+              git \
+              curl # fix shellcheck 
+            npm install
+
+      - run:
+          name: Lint
+          command: |
+            npm run lint
+
+      - run:
+          name: Tests
+          command: |
+            export HELM_HOME=''
+            mkdir -p tests/xunit
+            npm run --silent test:ci > tests/xunit/results.xml
+
+      - store_test_results:
+          path: tests/xunit
+
+workflows:
+  version: 2
+  test:
+    jobs:
+      - test
