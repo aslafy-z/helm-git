@@ -1,4 +1,6 @@
-load 'helm-git'
+#!/usr/bin/env bats
+
+load 'helm-git-helper'
 
 @test "fetch cert-manager/v0.5.2/index.yaml" {
     target_path=$(stashdir_new "cert-manager-v0.5.2")
@@ -18,4 +20,3 @@ load 'helm-git'
     run stat "$target_path/cert-manager-v0.5.2.tgz"
     [ $status = 0 ]
 }
-

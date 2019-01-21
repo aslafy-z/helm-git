@@ -3,12 +3,12 @@
 export HELM_GIT_DIRNAME="$BATS_TEST_DIRNAME/.."
 
 # shellcheck disable=SC1090
-source "$HELM_GIT_DIRNAME/_helm-git.sh"
+source "$HELM_GIT_DIRNAME/helm-git-plugin.sh"
 
 setup() {
-	stashdir_init
+  stashdir_init
 }
 
 teardown() {
-  	trap stashdir_clean EXIT
+  trap stashdir_clean EXIT
 }

@@ -15,7 +15,7 @@ jobs:
               bash \
               npm \
               git \
-              curl # fix shellcheck 
+              curl # fix shellcheck
             npm install
 
       - run:

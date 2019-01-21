@@ -1,6 +1,6 @@
 #!/usr/bin/env bats
 
-load 'helm-git'
+load 'helm-git-helper'
 
 # helm_init(helm_home)
 @test "helm_init proprely initialize helm" {

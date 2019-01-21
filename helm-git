@@ -9,6 +9,6 @@ set -eo pipefail
 cd "$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd -P)" >&2
 
 # shellcheck disable=SC1091
-. "./_helm-git.sh"
+. "./helm-git-plugin.sh"
 
 main "$1" "$2" "$3" "$4"

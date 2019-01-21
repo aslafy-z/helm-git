@@ -78,7 +78,7 @@ git_sparse_checkout() {
   _git_repo=$2
   _git_ref=$3
   _git_path=$4
-  
+
   cd "$_target_path" >&2
   git init --quiet
   git config core.sparseCheckout true
@@ -149,17 +149,17 @@ main() {
   readonly git_proto=$(echo "$_raw_uri" | cut -d+ -f2 | cut -d: -f1 | awk '{print$1}')
   string_contains "$allowed_protocols" "$git_proto" || \
     error "$error_invalid_protocol"
-  readonly git_repo=$(echo "$_raw_uri" | sed -e "s/^git+//" | cut -d'@' -f1) 
+  readonly git_repo=$(echo "$_raw_uri" | sed -e "s/^git+//" | cut -d'@' -f1)
   # TODO: Validate git_repo
-  git_ref=$(echo "$_raw_uri" | rev | cut -d'@' -f1 | rev | cut -d'/' -f1) 
+  git_ref=$(echo "$_raw_uri" | rev | cut -d'@' -f1 | rev | cut -d'/' -f1)
   # TODO: Validate git_ref
   if [ -z "$git_ref" ]; then
     warning "git_ref is empty, defaulted to 'master'. Prefer to pin git_ref in URI."
     git_ref="master"
   fi
-  readonly git_path=$(echo "$_raw_uri" | rev | cut -d'@' -f1 | rev | cut -d '/' -f2- | rev | cut -s -d'/' -f2- | rev) 
+  readonly git_path=$(echo "$_raw_uri" | rev | cut -d'@' -f1 | rev | cut -d '/' -f2- | rev | cut -s -d'/' -f2- | rev)
   # TODO: Validate git_path
-  readonly helm_file=$(echo "$_raw_uri" | rev | cut -d':' -f1 | cut -d'/' -f1 | rev) 
+  readonly helm_file=$(echo "$_raw_uri" | rev | cut -d':' -f1 | cut -d'/' -f1 | rev)
 
   echo ">>>> repo:$git_repo ref:$git_ref path:$git_path file:$helm_file" >&2
   readonly helm_repo_uri="git+$git_repo@$git_ref/$git_path"
@@ -200,11 +200,10 @@ main() {
   }
 
   [ "$chart_search_count" -eq "0" ] && \
-    error "No charts have been found" 
+    error "No charts have been found"
 
   helm_index "$helm_target_path" "$helm_repo_uri" || \
     error "Error while helm_index"
 
   cat "$helm_target_file"
 }
-
