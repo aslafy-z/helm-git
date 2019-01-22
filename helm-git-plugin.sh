@@ -12,6 +12,7 @@ readonly error_invalid_prefix="Git url should start with '$url_prefix'. Please c
 readonly error_invalid_protocol="Protocol not allowed, it should match one of theses: $allowed_protocols."
 
 debug=0
+[ "$HELM_GIT_DEBUG" = "1" ] && debug=1
 
 ## Tooling
 
@@ -40,8 +41,7 @@ stashdir_init() {
   readonly stashdir_list_file=$(mktemp -p "$TMPDIR" 'helm-git.stash.XXXXXX')
   stashdir_clean_skip=$debug
 
-  # Test env
-  if [ -z "$BATS_TEST_DIRNAME" ]; then
+  if [ $debug = 0 ]; then
     trap stashdir_clean EXIT
   fi
 }
@@ -144,7 +144,9 @@ helm_inspect_name() {
 # main(raw_uri)
 main() {
   helm_args="" # "$1 $2 $3"
-  _raw_uri=$4 # eg: git+https://git.com/user/repo//path/to/charts/index.yaml?ref=master
+  _raw_uri=$4 # eg: git+https://git.com/user/repo@path/to/charts/index.yaml?ref=master
+
+  [ $debug = 1 ] && echo "input:$_raw_uri" >&2
 
   string_starts "$_raw_uri" "$url_prefix" || \
     error "Invalid format, got '$_raw_uri'. $error_invalid_prefix"
@@ -155,13 +157,13 @@ main() {
   string_contains "$allowed_protocols" "$git_proto" || \
     error "$error_invalid_protocol"
 
-  readonly git_repo=$(echo "$_raw_uri" | sed -r 's#^(.+)[^:]?\/{2}.*#\1#')
+  readonly git_repo=$(echo "$_raw_uri" | sed -r 's#^(.+)@.*#\1#')
   # TODO: Validate git_repo
 
-  readonly git_path=$(echo "$_raw_uri" | sed -r 's#.*[^:]?\/{2}(.*)\/.*#\1#')
+  readonly git_path=$(echo "$_raw_uri" | sed -r 's#.*@(.*)\/.*#\1#')
   # TODO: Validate git_path
 
-  readonly helm_file=$(echo "$_raw_uri" | sed -r 's#.*[^:]?\/{2}.*\/([^?]*).*#\1#')
+  readonly helm_file=$(echo "$_raw_uri" | sed -r 's#.*@.*\/([^?]*).*#\1#')
 
   git_ref=$(echo "$_raw_uri" | sed '/^.*ref=\([^&#]*\).*$/!d;s//\1/')
   # TODO: Validate git_ref
@@ -172,7 +174,7 @@ main() {
 
   [ $debug = 1 ] && echo "repo:$git_repo ref:$git_ref path:$git_path file:$helm_file" >&2
 
-  readonly helm_repo_uri="git+$git_repo//$git_path?ref=$git_ref"
+  readonly helm_repo_uri="git+$git_repo@$git_path?ref=$git_ref"
 
   stashdir_init
 
