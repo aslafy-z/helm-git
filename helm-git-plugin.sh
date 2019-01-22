@@ -142,7 +142,7 @@ helm_inspect_name() {
 # main(raw_uri)
 main() {
   helm_args="" # "$1 $2 $3"
-  _raw_uri=$4 # eg: git+https://git.com/user/repo@ref/path/to/charts/index.yaml
+  _raw_uri=$4 # eg: git+https://git.com/user/repo//path/to/charts/index.yaml?ref=master
 
   string_starts "$_raw_uri" "$url_prefix" || \
     error "Invalid format, got '$_raw_uri'. $error_invalid_prefix"
