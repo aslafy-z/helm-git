@@ -111,12 +111,12 @@ helm_package() {
   helm package $helm_args --save=false "$_source_path" >/dev/null
 }
 
-# helm_dep_update(target_path)
-helm_dep_update() {
+# helm_dependency_build(target_path)
+helm_dependency_build() {
   _target_path=$1
 
   # shellcheck disable=SC2086
-  helm dependency update $helm_args --skip-refresh "$_target_path" >/dev/null
+  helm dependency build $helm_args "$_target_path" >/dev/null
 }
 
 # helm_index(target_path, base_url)
@@ -199,8 +199,8 @@ main() {
       chart_path=$(dirname "$chart_yaml_file")
       chart_name=$(helm_inspect_name "$chart_path")
 
-      helm_dep_update "$chart_path" || \
-        error "Error while helm_dep_update"
+      helm_dependency_build "$chart_path" || \
+        error "Error while helm_dependency_build"
       helm_package "$helm_target_path" "$chart_path" "$chart_name" || \
         error "Error while helm_package"
     done
