@@ -33,19 +33,19 @@ load 'helm-git-helper'
     [ $status = 1 ]
 }
 
-# helm_dep_update(target_path)
-@test "helm_dep_update success with example-chart" {
+# helm_dependency_update(target_path)
+@test "helm_dependency_update success with example-chart" {
     target_path=$(stashdir_new "test helm_package")
     cp -r "$BATS_TEST_DIRNAME/fixtures/example-chart" "$target_path"
-    run helm_dep_update "$target_path/example-chart"
+    run helm_dependency_update "$target_path/example-chart"
     [ $status = 0 ]
 }
 
-# helm_dep_update(target_path)
-@test "helm_dep_update fails with incorrect chart" {
+# helm_dependency_update(target_path)
+@test "helm_dependency_update fails with incorrect chart" {
     target_path=$(stashdir_new "test helm_package")
     cp -r "$BATS_TEST_DIRNAME/fixtures/existing-dir" "$target_path"
-    run helm_dep_update "$target_path/existing-dir"
+    run helm_dependency_update "$target_path/existing-dir"
     [ $status = 1 ]
 }
 
