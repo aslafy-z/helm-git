@@ -1,5 +1,5 @@
 name: "helm-git"
-version: "0.2.0"
+version: "0.3.0"
 description: |-
   Get non-packaged Charts directly from Git.
 downloaders:
