@@ -1,6 +1,5 @@
 #!/usr/bin/env sh
 
-# https://github.com/aslafy-z/helm-git
 # See Helm plugins documentation: https://docs.helm.sh/using_helm/#downloader-plugins
 
 set -eo pipefail
@@ -12,7 +11,7 @@ readonly url_prefix="git+"
 readonly error_invalid_prefix="Git url should start with '$url_prefix'. Please check helm-git usage."
 readonly error_invalid_protocol="Protocol not allowed, it should match one of theses: $allowed_protocols."
 
-debug=1
+debug=0
 
 ## Tooling
 
@@ -35,10 +34,13 @@ warning() {
 ## Temporary folders
 
 export TMPDIR=${TMPDIR:-/tmp}
+
+# stashdir_init()
 stashdir_init() {
   readonly stashdir_list_file=$(mktemp -p "$TMPDIR" 'helm-git.stash.XXXXXX')
-  stashdir_clean_skip=1
+  stashdir_clean_skip=$debug
 
+  # Test env
   if [ -z "$BATS_TEST_DIRNAME" ]; then
     trap stashdir_clean EXIT
   fi
@@ -111,12 +113,12 @@ helm_package() {
   helm package $helm_args --save=false "$_source_path" >/dev/null
 }
 
-# helm_dependency_build(target_path)
-helm_dependency_build() {
+# helm_dependency_update(target_path)
+helm_dependency_update() {
   _target_path=$1
 
   # shellcheck disable=SC2086
-  helm dependency build $helm_args "$_target_path" >/dev/null
+  helm dependency update $helm_args --skip-refresh "$_target_path" >/dev/null
 }
 
 # helm_index(target_path, base_url)
@@ -168,7 +170,8 @@ main() {
     git_ref="master"
   fi
 
-  echo ">>>> repo:$git_repo ref:$git_ref path:$git_path file:$helm_file" >&2
+  [ $debug = 1 ] && echo "repo:$git_repo ref:$git_ref path:$git_path file:$helm_file" >&2
+
   readonly helm_repo_uri="git+$git_repo//$git_path?ref=$git_ref"
 
   stashdir_init
@@ -199,8 +202,8 @@ main() {
       chart_path=$(dirname "$chart_yaml_file")
       chart_name=$(helm_inspect_name "$chart_path")
 
-      helm_dependency_build "$chart_path" || \
-        error "Error while helm_dependency_build"
+      helm_dependency_update "$chart_path" || \
+        error "Error while helm_dependency_update"
       helm_package "$helm_target_path" "$chart_path" "$chart_name" || \
         error "Error while helm_package"
     done
