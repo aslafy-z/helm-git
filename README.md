@@ -34,15 +34,15 @@ to the plugin, please see [these instructions](.github/CONTRIBUTING.md).
 
 Here's the Git urls format, followed by examples:
 
-    git+https://[provider.com]/[user]/[repo]:[git-ref]/[path/to/charts]
-    git+ssh://git@[provider.com]/[user]/[repo]@[git-ref]/[path/to/charts]
+    git+https://[provider.com]/[user]/[repo]//[path/to/charts]?ref=[git-ref]
+    git+ssh://git@[provider.com]/[user]/[repo]//[path/to/charts]?ref=[git-ref]
 
-    git+https://github.com/jetstack/cert-manager:release-0.5/contrib/charts
-    git+ssh://git@github.com/jetstack/cert-manager@release-0.5/contrib/charts
+    git+https://github.com/jetstack/cert-manager//contrib/charts?ref=v0.5.2
+    git+ssh://git@github.com/jetstack/cert-manager//contrib/charts?ref=v0.5.2
 
 Add your repository:
 
-    $ helm repo add cert-manager git+https://github.com/jetstack/cert-manager@release-0.5/contrib/charts
+    $ helm repo add cert-manager git+https://github.com/jetstack/cert-manager//contrib/charts?ref=v0.5.2
 
 You can use it as any other Helm chart repository. Try:
 
@@ -56,7 +56,7 @@ You can use it as any other Helm chart repository. Try:
 Fetching also works:
 
     $ helm fetch cert-manager/cert-manager
-    $ helm fetch git+https://github.com/jetstack/cert-manager@release-0.5/contrib/charts/cert-manager-0.5.2.tgz
+    $ helm fetch git+https://github.com/jetstack/cert-manager//contrib/charts/cert-manager-0.5.2.tgz?ref=v0.5.2
 
 ### Note on Git authentication
 
