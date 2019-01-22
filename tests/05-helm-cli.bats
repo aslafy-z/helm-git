@@ -36,7 +36,7 @@ function _run_helm_git() { run $HELM_GIT_DIRNAME/helm-git '' '' '' "$1"; }
     [ $status = 0 ]
     run helm repo add cert-manager-v0.5.2 "git+https://github.com/jetstack/cert-manager@contrib/charts?ref=v0.5.2"
     [ $status = 0 ]
-    run helm fetch -d "$target_dir" "cert-manager/cert-manager-v0.5.2"
+    run helm fetch -d "$target_dir" "cert-manager-v0.5.2/cert-manager"
     [ $status = 0 ]
     run stat "$target_dir/cert-manager-v0.5.2.tgz"
     [ $status = 0 ]
