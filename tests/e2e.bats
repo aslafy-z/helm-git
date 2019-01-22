@@ -9,7 +9,7 @@ function _run_helm_git() { run $HELM_GIT_DIRNAME/helm-git '' '' '' "$1"; }
     run helm_init "$HELM_HOME"
     helm repo add stable https://kubernetes-charts.storage.googleapis.com/ >/dev/null
     helm repo add incubator https://kubernetes-charts-incubator.storage.googleapis.com/ >/dev/null
-    run _run_helm_git "git+https://github.com/helm/charts@master/stable/index.yaml"
+    run _run_helm_git "git+https://github.com/helm/charts//stable/index.yaml?ref=master"
     [ $status = 0 ]
 }
 
@@ -18,6 +18,6 @@ function _run_helm_git() { run $HELM_GIT_DIRNAME/helm-git '' '' '' "$1"; }
     run helm_init "$HELM_HOME"
     helm repo add stable https://kubernetes-charts.storage.googleapis.com/ >/dev/null
     helm repo add incubator https://kubernetes-charts-incubator.storage.googleapis.com/ >/dev/null
-    run _run_helm_git "git+https://github.com/helm/charts@master/incubator/index.yaml"
+    run _run_helm_git "git+https://github.com/helm/charts//incubator/index.yaml?ref=master"
     [ $status = 0 ]
 }

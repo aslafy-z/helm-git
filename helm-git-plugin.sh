@@ -146,23 +146,30 @@ main() {
 
   string_starts "$_raw_uri" "$url_prefix" || \
     error "Invalid format, got '$_raw_uri'. $error_invalid_prefix"
-  readonly git_proto=$(echo "$_raw_uri" | cut -d+ -f2 | cut -d: -f1 | awk '{print$1}')
+
+  _raw_uri=$(echo "$_raw_uri" | sed 's/^git+//')
+
+  readonly git_proto=$(echo "$_raw_uri" | cut -d':' -f1)
   string_contains "$allowed_protocols" "$git_proto" || \
     error "$error_invalid_protocol"
-  readonly git_repo=$(echo "$_raw_uri" | sed -e "s/^git+//" | cut -d'@' -f1)
+
+  readonly git_repo=$(echo "$_raw_uri" | sed -r 's#^(.+)[^:]?\/{2}.*#\1#')
   # TODO: Validate git_repo
-  git_ref=$(echo "$_raw_uri" | rev | cut -d'@' -f1 | rev | cut -d'/' -f1)
+
+  readonly git_path=$(echo "$_raw_uri" | sed -r 's#.*[^:]?\/{2}(.*)\/.*#\1#')
+  # TODO: Validate git_path
+
+  readonly helm_file=$(echo "$_raw_uri" | sed -r 's#.*[^:]?\/{2}.*\/([^?]*).*#\1#')
+
+  git_ref=$(echo "$_raw_uri" | sed '/^.*ref=\([^&#]*\).*$/!d;s//\1/')
   # TODO: Validate git_ref
   if [ -z "$git_ref" ]; then
     warning "git_ref is empty, defaulted to 'master'. Prefer to pin git_ref in URI."
     git_ref="master"
   fi
-  readonly git_path=$(echo "$_raw_uri" | rev | cut -d'@' -f1 | rev | cut -d '/' -f2- | rev | cut -s -d'/' -f2- | rev)
-  # TODO: Validate git_path
-  readonly helm_file=$(echo "$_raw_uri" | rev | cut -d':' -f1 | cut -d'/' -f1 | rev)
 
   echo ">>>> repo:$git_repo ref:$git_ref path:$git_path file:$helm_file" >&2
-  readonly helm_repo_uri="git+$git_repo@$git_ref/$git_path"
+  readonly helm_repo_uri="git+$git_repo//$git_path?ref=$git_ref"
 
   stashdir_init
 

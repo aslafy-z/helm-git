@@ -6,7 +6,7 @@
     "test": "bats tests/*-*.bats",
     "test:e2e": "bats tests/e2e.bats",
     "test:ci": "bats tests/*.bats | tap-xunit",
-    "lint": "shellcheck helm-git *.sh tests/*.bash"
+    "lint": "eclint check **/*; shellcheck 'helm-git' *.sh tests/*.bash"
   },
   "repository": {
     "type": "git",
@@ -38,7 +38,7 @@
         "eclint fix",
         "git add"
       ],
-      "**/helm-git*": [
+      "{helm-git,**/*.{bash,sh}}": [
         "shellcheck",
         "git add"
       ]
