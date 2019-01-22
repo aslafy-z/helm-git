@@ -27,9 +27,8 @@ jobs:
           name: Tests
           command: |
             export HELM_HOME=''
-            npx bats -F bats-format-junit --extra-flags -T tests/*.bats
             mkdir -p tests/junit
-            mv TestReport-.xml tests/junit/results.xml
+            npx bats -F bats-format-junit  --output tests/junit --extra-flags -T tests/*.bats
 
       - store_test_results:
           path: tests/junit
