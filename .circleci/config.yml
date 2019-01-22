@@ -27,8 +27,8 @@ jobs:
           name: Tests
           command: |
             export HELM_HOME=''
-            mkdir -p tests/xunit
-            npm run --silent test:ci > tests/xunit/results.xml
+            mkdir -p tests/junit
+            npx bats -F bats-format-junit --extra-flags -T --output tests/junit tests/*.bats
 
       - store_test_results:
           path: tests/xunit
