@@ -1,0 +1,14 @@
+#!/usr/bin/env sh
+
+# Small wrapper for helm downloader
+# Called with args: certFile keyFile caFile full-URL
+
+set -eo pipefail
+
+# cd to helm-git plugin folder
+cd "$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd -P)" >&2
+
+# shellcheck disable=SC1091
+. "./helm-git-plugin.sh"
+
+main "$1" "$2" "$3" "$4"
