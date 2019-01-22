@@ -14,8 +14,7 @@ jobs:
             apk add --no-cache \
               bash \
               npm \
-              git \
-              curl # fix shellcheck
+              git
             npm install
 
       - run:
