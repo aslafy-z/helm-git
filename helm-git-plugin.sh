@@ -12,6 +12,7 @@ readonly error_invalid_prefix="Git url should start with '$url_prefix'. Please c
 readonly error_invalid_protocol="Protocol not allowed, it should match one of theses: $allowed_protocols."
 
 debug=0
+[ "$HELM_GIT_DEBUG" = "1" ] && debug=1
 
 ## Tooling
 
@@ -40,8 +41,7 @@ stashdir_init() {
   readonly stashdir_list_file=$(mktemp -p "$TMPDIR" 'helm-git.stash.XXXXXX')
   stashdir_clean_skip=$debug
 
-  # Test env
-  if [ -z "$BATS_TEST_DIRNAME" ]; then
+  if [ $debug = 0 ]; then
     trap stashdir_clean EXIT
   fi
 }
