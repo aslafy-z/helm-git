@@ -26,7 +26,7 @@ to the plugin, please see [these instructions](.github/CONTRIBUTING.md).
 
 ## Uninstall
 
-    $ helm plugin remove git
+    $ helm plugin remove helm-git
 
 ## Usage
 
