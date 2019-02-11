@@ -2,7 +2,8 @@
 
 # See Helm plugins documentation: https://docs.helm.sh/using_helm/#downloader-plugins
 
-set -eo pipefail
+# shellcheck disable=SC2039
+set -e -o pipefail
 
 readonly bin_name="helm-git"
 readonly allowed_protocols="https http file ssh"
