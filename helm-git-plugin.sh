@@ -39,7 +39,7 @@ export TMPDIR=${TMPDIR:-/tmp}
 
 # stashdir_init()
 stashdir_init() {
-  readonly stashdir_list_file=$(mktemp -p "$TMPDIR" 'helm-git.stash.XXXXXX')
+  readonly stashdir_list_file=$(mktemp 'helm-git.stash.XXXXXX')
   stashdir_clean_skip=$debug
 
   if [ $debug = 0 ]; then
@@ -51,7 +51,7 @@ stashdir_init() {
 stashdir_new() {
   _comment="$1"
 
-  new_dir=$(mktemp -p "$TMPDIR" -d 'helm-git.XXXXXX')
+  new_dir=$(mktemp -d 'helm-git.XXXXXX')
   echo "$new_dir" >> "$stashdir_list_file"
   echo "$new_dir"
   if [ $debug = 1 ]; then
