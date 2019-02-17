@@ -3,7 +3,8 @@
 # Small wrapper for helm downloader
 # Called with args: certFile keyFile caFile full-URL
 
-set -eo pipefail
+# shellcheck disable=SC2039
+set -e -o pipefail
 
 # cd to helm-git plugin folder
 cd "$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd -P)" >&2

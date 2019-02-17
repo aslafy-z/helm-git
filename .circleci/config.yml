@@ -16,7 +16,7 @@ jobs:
               npm \
               git \
               curl # fix shellcheck
-            npm install
+            npm ci
 
       - run:
           name: Lint

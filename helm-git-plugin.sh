@@ -2,7 +2,8 @@
 
 # See Helm plugins documentation: https://docs.helm.sh/using_helm/#downloader-plugins
 
-set -eo pipefail
+# shellcheck disable=SC2039
+set -e -o pipefail
 
 readonly bin_name="helm-git"
 readonly allowed_protocols="https http file ssh"
@@ -38,7 +39,7 @@ export TMPDIR=${TMPDIR:-/tmp}
 
 # stashdir_init()
 stashdir_init() {
-  readonly stashdir_list_file=$(mktemp -p "$TMPDIR" 'helm-git.stash.XXXXXX')
+  readonly stashdir_list_file=$(mktemp "$TMPDIR/helm-git.stash.XXXXXX")
   stashdir_clean_skip=$debug
 
   if [ $debug = 0 ]; then
@@ -50,7 +51,7 @@ stashdir_init() {
 stashdir_new() {
   _comment="$1"
 
-  new_dir=$(mktemp -p "$TMPDIR" -d 'helm-git.XXXXXX')
+  new_dir=$(mktemp -d "$TMPDIR/helm-git.XXXXXX")
   echo "$new_dir" >> "$stashdir_list_file"
   echo "$new_dir"
   if [ $debug = 1 ]; then
@@ -157,13 +158,13 @@ main() {
   string_contains "$allowed_protocols" "$git_proto" || \
     error "$error_invalid_protocol"
 
-  readonly git_repo=$(echo "$_raw_uri" | sed -r 's#^(.+)@.*#\1#')
+  readonly git_repo=$(echo "$_raw_uri" | sed -E 's#^(.+)@.*#\1#')
   # TODO: Validate git_repo
 
-  readonly git_path=$(echo "$_raw_uri" | sed -r 's#.*@(.*)\/.*#\1#')
+  readonly git_path=$(echo "$_raw_uri" | sed -E 's#.*@(.*)\/.*#\1#')
   # TODO: Validate git_path
 
-  readonly helm_file=$(echo "$_raw_uri" | sed -r 's#.*@.*\/([^?]*).*#\1#')
+  readonly helm_file=$(echo "$_raw_uri" | sed -E 's#.*@.*\/([^?]*).*#\1#')
 
   git_ref=$(echo "$_raw_uri" | sed '/^.*ref=\([^&#]*\).*$/!d;s//\1/')
   # TODO: Validate git_ref
