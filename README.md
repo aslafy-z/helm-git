@@ -36,27 +36,28 @@ Here's the Git urls format, followed by examples:
 
     git+https://[provider.com]/[user]/[repo]@[path/to/charts]?ref=[git-ref]
     git+ssh://git@[provider.com]/[user]/[repo]@[path/to/charts]?ref=[git-ref]
+    git+file://[path/to/repo]@[path/to/charts]?ref=[git-ref]
 
-    git+https://github.com/jetstack/cert-manager@contrib/charts?ref=v0.5.2
-    git+ssh://git@github.com/jetstack/cert-manager@contrib/charts?ref=v0.5.2
+    git+https://github.com/jetstack/cert-manager@deploy/charts?ref=v0.6.2
+    git+ssh://git@github.com/jetstack/cert-manager@deploy/charts?ref=v0.6.2
+    git+file:///home/zadkiel/charts/cert-manager@deploy/charts?ref=v0.6.2
 
 Add your repository:
 
-    $ helm repo add cert-manager git+https://github.com/jetstack/cert-manager@contrib/charts?ref=v0.5.2
+    $ helm repo add cert-manager git+https://github.com/jetstack/cert-manager@deploy/charts?ref=v0.6.2
 
 You can use it as any other Helm chart repository. Try:
 
-    $ helm search coolcharts
-    NAME                       	VERSION	  DESCRIPTION
-    cert-manager/cert-manager   0.5.2     A Helm chart.
+    $ helm search cert-manager
+    NAME                                    CHART VERSION   APP VERSION     DESCRIPTION                  
+    cert-manager/cert-manager               v0.6.6          v0.6.2          A Helm chart for cert-manager
 
-
-    $ helm install cert-manager/cert-manager --version "0.5.2"
+    $ helm install cert-manager/cert-manager --version "0.6.6"
 
 Fetching also works:
 
-    $ helm fetch cert-manager/cert-manager --version "0.5.2"
-    $ helm fetch git+https://github.com/jetstack/cert-manager@contrib/charts/cert-manager-0.5.2.tgz?ref=v0.5.2
+    $ helm fetch cert-manager/cert-manager --version "0.6.6"
+    $ helm fetch git+https://github.com/jetstack/cert-manager@deploy/charts/cert-manager-v0.6.2.tgz?ref=v0.6.2
 
 ### Note on Git authentication
 
