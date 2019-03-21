@@ -13,7 +13,9 @@ readonly error_invalid_prefix="Git url should start with '$url_prefix'. Please c
 readonly error_invalid_protocol="Protocol not allowed, it should match one of theses: $allowed_protocols."
 
 debug=0
-[ "$HELM_GIT_DEBUG" = "1" ] && debug=1
+if [ "$HELM_GIT_DEBUG" = "1" ]; then
+  debug=1
+fi
 
 ## Tooling
 
@@ -22,7 +24,12 @@ string_ends() { [ "$(echo "$1" | cut -c $((${#1}-${#2}+1))-${#1})" = "$2" ]; }
 string_contains() { echo "$1" | grep -q "$2"; }
 path_join() { echo "${1:+$1/}$2" | sed 's#//#/#g'; }
 
-## Error handling
+## Logging
+
+debug() {
+  [ $debug = 1 ] && echo "Debug in plugin '$bin_name': $*" >&2
+  return 0
+}
 
 error() {
   echo "Error in plugin '$bin_name': $*" >&2
@@ -54,9 +61,7 @@ stashdir_new() {
   new_dir=$(mktemp -d "$TMPDIR/helm-git.XXXXXX")
   echo "$new_dir" >> "$stashdir_list_file"
   echo "$new_dir"
-  if [ $debug = 1 ]; then
-    echo "stashdir_new: $_comment ($new_dir)" >&2
-  fi
+  debug "stashdir_new<$_comment> = $new_dir"
 }
 
 # stashdir_clean()
@@ -75,20 +80,27 @@ git_try() {
   GIT_TERMINAL_PROMPT=0 git ls-remote "$_git_repo" --refs >&2 || return 1
 }
 
-# git_sparse_checkout(target_path, git_repo, git_ref, git_path)
-git_sparse_checkout() {
-  _target_path=$1
-  _git_repo=$2
-  _git_ref=$3
-  _git_path=$4
+# git_checkout(sparse, target_path, git_repo, git_ref, git_path)
+git_checkout() {
+  _sparse=$1
+  _target_path=$2
+  _git_repo=$3
+  _git_ref=$4
+  _git_path=$5
 
   cd "$_target_path" >&2
   git init --quiet
-  git config core.sparseCheckout true
   git remote add origin "$_git_repo" >&2
-  [ -n "$_git_path" ] && echo "$_git_path/*" > .git/info/sparse-checkout
-  git pull --depth=1 origin "$_git_ref" 2>/dev/null 1>&2 || error \
-    error "Unable to pull. Check your git_ref and git_path."
+  if [ $_sparse = 1 ]; then
+    git config core.sparseCheckout true
+    [ -n "$_git_path" ] && echo "$_git_path/*" > .git/info/sparse-checkout
+    git pull --depth 1 origin "$_git_ref" 2>/dev/null 1>&2 || error \
+      error "Unable to sparse-checkout. Check your git_ref and git_path."
+  else
+    git pull origin master 2>/dev/null 1>&2 || error \
+      error "Unable to checkout. Check your git_ref and git_path."
+    git checkout "$git_ref" >&2
+  fi
 }
 
 # helm_init(helm_home)
@@ -147,8 +159,6 @@ main() {
   helm_args="" # "$1 $2 $3"
   _raw_uri=$4 # eg: git+https://git.com/user/repo@path/to/charts/index.yaml?ref=master
 
-  [ $debug = 1 ] && echo "input:$_raw_uri" >&2
-
   string_starts "$_raw_uri" "$url_prefix" || \
     error "Invalid format, got '$_raw_uri'. $error_invalid_prefix"
 
@@ -158,12 +168,10 @@ main() {
   string_contains "$allowed_protocols" "$git_proto" || \
     error "$error_invalid_protocol"
 
-  readonly git_repo=$(echo "$_raw_uri" | sed -E 's#^(.+)@.*#\1#')
+  readonly git_repo=$(echo "$_raw_uri" | sed -E 's#^([^@\?]+)@?[^@\?]+\??.*$#\1#')
   # TODO: Validate git_repo
-
   readonly git_path=$(echo "$_raw_uri" | sed -E 's#.*@(.*)\/.*#\1#')
   # TODO: Validate git_path
-
   readonly helm_file=$(echo "$_raw_uri" | sed -E 's#.*@.*\/([^?]*).*#\1#')
 
   git_ref=$(echo "$_raw_uri" | sed '/^.*ref=\([^&#]*\).*$/!d;s//\1/')
@@ -173,15 +181,18 @@ main() {
     git_ref="master"
   fi
 
-  [ $debug = 1 ] && echo "repo:$git_repo ref:$git_ref path:$git_path file:$helm_file" >&2
+  git_sparse=$(echo "$_raw_uri" | sed '/^.*sparse=\([^&#]*\).*$/!d;s//\1/')
+  [ -z "$git_sparse" ] && git_sparse=1
 
-  readonly helm_repo_uri="git+$git_repo@$git_path?ref=$git_ref"
+  debug "repo: $git_repo ref: $git_ref path: $git_path file: $helm_file sparse: $git_sparse"
+  readonly helm_repo_uri="git+$git_repo@$git_path?ref=$git_ref&sparse=$git_sparse"
+  debug "helm_repo_uri: $helm_repo_uri"
 
   stashdir_init
 
   readonly git_root_path=$(stashdir_new "git_root_path")
   readonly git_sub_path=$(path_join "$git_root_path" "$git_path")
-  git_sparse_checkout "$git_root_path" "$git_repo" "$git_ref" "$git_path" || \
+  git_checkout "$git_sparse" "$git_root_path" "$git_repo" "$git_ref" "$git_path" || \
     error "Error while git_sparse_checkout"
 
   readonly helm_target_path=$(stashdir_new "helm_target_path")
@@ -197,6 +208,7 @@ main() {
   helm_args="$helm_args --home=$helm_home"
 
   chart_search_root="$git_sub_path"
+
   chart_search=$(find "$chart_search_root" -maxdepth 2 -name "Chart.yaml" -print)
   chart_search_count=$(echo "$chart_search" | wc -l)
 

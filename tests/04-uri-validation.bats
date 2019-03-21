@@ -40,3 +40,13 @@ function _run_helm_git() { run $HELM_GIT_DIRNAME/helm-git '' '' '' "$1"; }
     [ $status = 0 ]
     [ -n "$(echo $output | grep "git_ref is empty")" ]
 }
+
+@test "should success when sparse false" {
+    _run_helm_git "git+https://github.com/jetstack/cert-manager@deploy/charts/index.yaml?ref=master&sparse=0"
+    [ $status = 0 ]
+}
+
+@test "should success when sparse true" {
+    _run_helm_git "git+https://github.com/jetstack/cert-manager@deploy/charts/index.yaml?ref=master&sparse=1"
+    [ $status = 0 ]
+}
