@@ -91,7 +91,7 @@ git_checkout() {
   cd "$_target_path" >&2
   git init --quiet
   git remote add origin "$_git_repo" >&2
-  if [ $_sparse = 1 ]; then
+  if [ "$_sparse" = "1" ]; then
     git config core.sparseCheckout true
     [ -n "$_git_path" ] && echo "$_git_path/*" > .git/info/sparse-checkout
     git pull --depth 1 origin "$_git_ref" 2>/dev/null 1>&2 || error \
