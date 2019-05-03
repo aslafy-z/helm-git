@@ -1,4 +1,4 @@
-#!/usr/bin/env sh
+#!/usr/bin/env bash
 
 # Small wrapper for helm downloader
 # Called with args: certFile keyFile caFile full-URL
