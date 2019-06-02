@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 
 export HELM_GIT_DIRNAME="$BATS_TEST_DIRNAME/.."
-# function _run_helm_git() { run "$HELM_GIT_DIRNAME/helm-git" '' '' '' "$1"; }
 
 # shellcheck disable=SC1090
 source "$HELM_GIT_DIRNAME/helm-git-plugin.sh"
