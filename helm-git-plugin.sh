@@ -2,8 +2,7 @@
 
 # See Helm plugins documentation: https://docs.helm.sh/using_helm/#downloader-plugins
 
-# shellcheck disable=SC2039
-set -e -o pipefail
+set -e
 
 readonly bin_name="helm-git"
 readonly allowed_protocols="https http file ssh"
@@ -17,10 +16,12 @@ if [ "$HELM_GIT_DEBUG" = "1" ]; then
   debug=1
 fi
 
+export TMPDIR=${TMPDIR:-/tmp}
+
 ## Tooling
 
 string_starts() { [ "$(echo "$1" | cut -c 1-${#2})" = "$2" ]; }
-string_ends() { [ "$(echo "$1" | cut -c $((${#1}-${#2}+1))-${#1})" = "$2" ]; }
+string_ends() { [ "$(echo "$1" | cut -c $((${#1} - ${#2} + 1))-${#1})" = "$2" ]; }
 string_contains() { echo "$1" | grep -q "$2"; }
 path_join() { echo "${1:+$1/}$2" | sed 's#//#/#g'; }
 
@@ -38,37 +39,6 @@ error() {
 
 warning() {
   echo "Warning in plugin '$bin_name': $*" >&2
-}
-
-## Temporary folders
-
-export TMPDIR=${TMPDIR:-/tmp}
-
-# stashdir_init()
-stashdir_init() {
-  readonly stashdir_list_file=$(mktemp "$TMPDIR/helm-git.stash.XXXXXX")
-  stashdir_clean_skip=$debug
-
-  if [ $debug = 0 ]; then
-    trap stashdir_clean EXIT
-  fi
-}
-
-# stashdir_new(comment)
-stashdir_new() {
-  _comment="$1"
-
-  new_dir=$(mktemp -d "$TMPDIR/helm-git.XXXXXX")
-  echo "$new_dir" >> "$stashdir_list_file"
-  echo "$new_dir"
-  debug "stashdir_new<$_comment> = $new_dir"
-}
-
-# stashdir_clean()
-stashdir_clean() {
-  [ "$stashdir_clean_skip" -eq "1" ] && return 0
-  xargs rm -rf < "$stashdir_list_file" >&2
-  rm -f "$stashdir_list_file" >&2
 }
 
 ## Functions
@@ -91,15 +61,17 @@ git_checkout() {
   cd "$_target_path" >&2
   git init --quiet
   git remote add origin "$_git_repo" >&2
+  # git fetch --tags >&2
   if [ "$_sparse" = "1" ]; then
     git config core.sparseCheckout true
-    [ -n "$_git_path" ] && echo "$_git_path/*" > .git/info/sparse-checkout
-    git pull --depth 1 origin "$_git_ref" 2>/dev/null 1>&2 || error \
-      error "Unable to sparse-checkout. Check your git_ref and git_path."
+    [ -n "$_git_path" ] && echo "$_git_path/*" >.git/info/sparse-checkout
+    git pull --quiet --depth 1 origin "$_git_ref" >&2 || error \
+      error "Unable to sparse-checkout. Check your Git ref ($git_ref) and path ($git_path)."
   else
-    git pull origin master 2>/dev/null 1>&2 || error \
-      error "Unable to checkout. Check your git_ref and git_path."
-    git checkout "$git_ref" >&2
+    git fetch --quiet origin >&2 || error \
+      error "Unable to fetch remote. Check your Git url."
+    git checkout --quiet "$git_ref" >&2 || error \
+      error "Unable to checkout ref. Check your Git ref ($git_ref)."
   fi
 }
 
@@ -117,13 +89,19 @@ helm_package() {
   _source_path=$2
   _chart_name=$3
 
-  tmp_target=$(stashdir_new "helm_package '$_source_path'")
+  tmp_target="$(mktemp -d "$TMPDIR/helm-git.XXXXXX")"
   cp -r "$_source_path" "$tmp_target/$_chart_name"
   _source_path="$tmp_target/$_chart_name"
   cd "$_target_path" >&2
 
   # shellcheck disable=SC2086
   helm package $helm_args --save=false "$_source_path" >/dev/null
+  ret=$?
+
+  rm -rf "$tmp_target"
+
+  # forward return code
+  return $ret
 }
 
 # helm_dependency_update(target_path)
@@ -157,15 +135,17 @@ helm_inspect_name() {
 # main(raw_uri)
 main() {
   helm_args="" # "$1 $2 $3"
-  _raw_uri=$4 # eg: git+https://git.com/user/repo@path/to/charts/index.yaml?ref=master
+  _raw_uri=$4  # eg: git+https://git.com/user/repo@path/to/charts/index.yaml?ref=master
 
-  string_starts "$_raw_uri" "$url_prefix" || \
+  # Parse URI
+
+  string_starts "$_raw_uri" "$url_prefix" ||
     error "Invalid format, got '$_raw_uri'. $error_invalid_prefix"
 
   _raw_uri=$(echo "$_raw_uri" | sed 's/^git+//')
 
   readonly git_proto=$(echo "$_raw_uri" | cut -d':' -f1)
-  string_contains "$allowed_protocols" "$git_proto" || \
+  string_contains "$allowed_protocols" "$git_proto" ||
     error "$error_invalid_protocol"
 
   readonly git_repo=$(echo "$_raw_uri" | sed -E 's#^([^@\?]+)@?[^@\?]+\??.*$#\1#')
@@ -177,7 +157,7 @@ main() {
   git_ref=$(echo "$_raw_uri" | sed '/^.*ref=\([^&#]*\).*$/!d;s//\1/')
   # TODO: Validate git_ref
   if [ -z "$git_ref" ]; then
-    warning "git_ref is empty, defaulted to 'master'. Prefer to pin git_ref in URI."
+    warning "git_ref is empty, defaulted to 'master'. Prefer to pin GIT ref in URI."
     git_ref="master"
   fi
 
@@ -188,20 +168,33 @@ main() {
   readonly helm_repo_uri="git+$git_repo@$git_path?ref=$git_ref&sparse=$git_sparse"
   debug "helm_repo_uri: $helm_repo_uri"
 
-  stashdir_init
+  case "$helm_file" in
+  index.yaml) ;;
+  *.tgz) ;;
+  *) error "Target file name has to be either 'index.yaml' or a tgz release" ;;
+  esac
 
-  readonly git_root_path=$(stashdir_new "git_root_path")
+
+  # Setup cleanup trap
+  cleanup() {
+     rm -rf "$git_root_path" \
+      "$helm_home_target_path" \
+      "$helm_target_path"
+  }
+  trap cleanup EXIT
+
+  readonly git_root_path="$(mktemp -d "$TMPDIR/helm-git.XXXXXX")"
   readonly git_sub_path=$(path_join "$git_root_path" "$git_path")
-  git_checkout "$git_sparse" "$git_root_path" "$git_repo" "$git_ref" "$git_path" || \
+  git_checkout "$git_sparse" "$git_root_path" "$git_repo" "$git_ref" "$git_path" ||
     error "Error while git_sparse_checkout"
 
-  readonly helm_target_path=$(stashdir_new "helm_target_path")
+  readonly helm_target_path="$(mktemp -d "$TMPDIR/helm-git.XXXXXX")"
   readonly helm_target_file="$(path_join "$helm_target_path" "$helm_file")"
 
   # Set helm home
   helm_home=$(helm home)
   if [ -z "$helm_home" ]; then
-    readonly helm_home_target_path=$(stashdir_new "helm home")
+    readonly helm_home_target_path="$(mktemp -d "$TMPDIR/helm-git.XXXXXX")"
     helm_init "$helm_home_target_path" || error "Couldn't init helm"
     helm_home=$helm_home_target_path
   fi
@@ -217,17 +210,17 @@ main() {
       chart_path=$(dirname "$chart_yaml_file")
       chart_name=$(helm_inspect_name "$chart_path")
 
-      helm_dependency_update "$chart_path" || \
+      helm_dependency_update "$chart_path" ||
         error "Error while helm_dependency_update"
-      helm_package "$helm_target_path" "$chart_path" "$chart_name" || \
+      helm_package "$helm_target_path" "$chart_path" "$chart_name" ||
         error "Error while helm_package"
     done
   }
 
-  [ "$chart_search_count" -eq "0" ] && \
+  [ "$chart_search_count" -eq "0" ] &&
     error "No charts have been found"
 
-  helm_index "$helm_target_path" "$helm_repo_uri" || \
+  helm_index "$helm_target_path" "$helm_repo_uri" ||
     error "Error while helm_index"
 
   cat "$helm_target_file"

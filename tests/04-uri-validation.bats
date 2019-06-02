@@ -1,8 +1,6 @@
 #!/usr/bin/env bats
 
-load 'helm-git-helper'
-
-function _run_helm_git() { run $HELM_GIT_DIRNAME/helm-git '' '' '' "$1"; }
+load 'test-helper'
 
 @test "should fail with bad prefix" {
     _run_helm_git "badprefix+https://github.com/jetstack/cert-manager@contrib/charts/cert-manager/index.yaml?ref=v0.5.2"
