@@ -65,7 +65,7 @@ Fetching also works:
 **name**|**description**|**default**
 :-----:|:-----:|:-----:
 ref|Set git ref to a branch or tag. Works also for commits with `sparse=0`|`master`
-sparse|Set git strategy to sparse. Will try to fetch only the needed commits for this path.|`1`
+sparse|Set git strategy to sparse. Will try to fetch only the needed commits for the target path.|`1`
 
 ### Note on Git authentication
 
