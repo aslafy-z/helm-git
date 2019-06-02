@@ -1,34 +1,34 @@
 #!/usr/bin/env bats
 
-load 'helm-git-helper'
+load 'test-helper'
 
-# git_sparse_checkout(target_path, git_repo, git_ref, git_path)
+# git_checkout(git_sparse, target_path, git_repo, git_ref, git_path)
 
-@test "git_sparse_checkout fail with non-existing path" {
-  target_path=$(stashdir_new "fake git dir")
+@test "git_checkout fail with non-existing path" {
+  git_sparse=1
   git_repo="https://github.com/aslafy-z/helm-git"
   git_ref="master"
   git_path="tests/fixtures/non-existing-dir"
-  run git_sparse_checkout "$target_path" "$git_repo" "$git_ref" "$git_path"
+  run git_checkout "$git_sparse" "$HELM_GIT_OUTPUT" "$git_repo" "$git_ref" "$git_path"
   [ $status = 1 ]
 }
 
-@test "git_sparse_checkout fail with non-existing ref" {
-  target_path=$(stashdir_new "fake git dir")
+@test "git_checkout fail with non-existing ref" {
+  git_sparse=1
   git_repo="https://github.com/aslafy-z/helm-git"
   git_ref="this/ref/wont/ever/exist"
   git_path="tests/fixtures/existing-dir"
-  run git_sparse_checkout "$target_path" "$git_repo" "$git_ref" "$git_path"
+  run git_checkout "$git_sparse" "$HELM_GIT_OUTPUT" "$git_repo" "$git_ref" "$git_path"
   [ $status = 1 ]
 }
 
-@test "git_sparse_checkout succeed with existing path" {
-  target_path=$(stashdir_new "fake git dir")
+@test "git_checkout succeed with existing path" {
+  git_sparse=1
   git_repo="https://github.com/aslafy-z/helm-git"
   git_ref="master"
   git_path="tests/fixtures/existing-dir"
-  run git_sparse_checkout "$target_path" "$git_repo" "$git_ref" "$git_path"
+  run git_checkout "$git_sparse" "$HELM_GIT_OUTPUT" "$git_repo" "$git_ref" "$git_path"
   [ $status = 0 ]
-  run stat "$target_path/$git_path/existing-file"
+  run stat "$HELM_GIT_OUTPUT/$git_path/existing-file"
   [ $status = 0 ]
 }
