@@ -1,6 +1,6 @@
 {
   "name": "helm-git",
-  "version": "0.3.1",
+  "version": "0.4.0",
   "description": "npm tooling for helm-git Helm downloader plugin",
   "scripts": {
     "test": "bats tests/*-*.bats",
