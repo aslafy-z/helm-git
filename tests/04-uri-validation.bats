@@ -39,6 +39,11 @@ load 'test-helper'
     [ -n "$(echo $output | grep "git_ref is empty")" ]
 }
 
+@test "should success with username" {
+    _run_helm_git "git+https://git@github.com/jetstack/cert-manager@deploy/charts/index.yaml?ref=master"
+    [ $status = 0 ]
+}
+
 @test "should success when sparse false" {
     _run_helm_git "git+https://github.com/jetstack/cert-manager@deploy/charts/index.yaml?ref=master&sparse=0"
     [ $status = 0 ]
