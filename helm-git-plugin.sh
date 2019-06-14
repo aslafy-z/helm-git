@@ -142,7 +142,7 @@ main() {
   string_starts "$_raw_uri" "$url_prefix" ||
     error "Invalid format, got '$_raw_uri'. $error_invalid_prefix"
 
-  _raw_uri=$(echo "$_raw_uri" | sed 's/^git+//')
+  _raw_uri=$(echo "$_raw_uri" | sed "s/^$url_prefix//")
 
   readonly git_proto=$(echo "$_raw_uri" | cut -d':' -f1)
   string_contains "$allowed_protocols" "$git_proto" ||
@@ -150,9 +150,9 @@ main() {
 
   readonly git_repo=$(echo "$_raw_uri" | sed -E 's#^([^/]+//[^/]+[^@\?]+)@?[^@\?]+\??.*$#\1#')
   # TODO: Validate git_repo
-  readonly git_path=$(echo "$_raw_uri" | sed -E 's#.*@(.*)\/.*#\1#')
+  readonly git_path=$(echo "$_raw_uri" | sed -nE 's#.*@(.*)\/.*#\1#p')
   # TODO: Validate git_path
-  readonly helm_file=$(echo "$_raw_uri" | sed -E 's#.*@.*\/([^?]*).*#\1#')
+  readonly helm_file=$(echo "$_raw_uri" | sed 's/.*[@\/]//;s/?.*//')
 
   git_ref=$(echo "$_raw_uri" | sed '/^.*ref=\([^&#]*\).*$/!d;s//\1/')
   # TODO: Validate git_ref
@@ -165,19 +165,19 @@ main() {
   [ -z "$git_sparse" ] && git_sparse=1
 
   debug "repo: $git_repo ref: $git_ref path: $git_path file: $helm_file sparse: $git_sparse"
-  readonly helm_repo_uri="git+$git_repo@$git_path?ref=$git_ref&sparse=$git_sparse"
+  readonly helm_repo_uri="$url_prefix$git_repo@$git_path?ref=$git_ref&sparse=$git_sparse"
   debug "helm_repo_uri: $helm_repo_uri"
 
   case "$helm_file" in
   index.yaml) ;;
   *.tgz) ;;
-  *) error "Target file name has to be either 'index.yaml' or a tgz release" ;;
+  *) error "Target file name has to be either 'index.yaml' or a tgz release. '$helm_file' given" ;;
   esac
 
 
   # Setup cleanup trap
   cleanup() {
-     rm -rf "$git_root_path" \
+    rm -rf "$git_root_path" \
       "$helm_home_target_path" \
       "$helm_target_path"
   }

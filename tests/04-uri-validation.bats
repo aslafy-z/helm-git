@@ -53,3 +53,8 @@ load 'test-helper'
     _run_helm_git "git+https://github.com/jetstack/cert-manager@deploy/charts/index.yaml?ref=master&sparse=1"
     [ $status = 0 ]
 }
+
+@test "should success when path empty" {
+    _run_helm_git "git+https://github.com/bitsofinfo/appdeploy@index.yaml"
+    [ $status = 0 ]
+}
