@@ -74,6 +74,15 @@ As this plugin uses `git` CLI to clone repos. You can configure private access i
 - **using ssh**: Start a [ssh-agent daemon](https://help.github.com/articles/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent/#adding-your-ssh-key-to-the-ssh-agent)
 - **using https**: Use a [credentials helper](https://git-scm.com/docs/gitcredentials)
 
+## Troubleshooting
+
+You can enable debug output by setting `HELM_GIT_DEBUG` environment variable to `1`:
+```
+HELM_GIT_DEBUG=1 helm repo add cert-manager git+https://github.com/jetstack/cert-manager@deploy/charts?ref=v0.6.2
+```
+
+In order to debug in a more efficient maneer, I advise you use `helm fetch` instead of `helm repo add`.   
+
 ## Contributing
 
 Contributions are welcome! Please see [these instructions](.github/CONTRIBUTING.md) that will help you to develop the plugin.
