@@ -19,7 +19,7 @@ The installation itself is simple as:
 
 You can install a specific release version:
 
-    $ helm plugin install https://github.com/aslafy-z/helm-git.git --version 0.4.1
+    $ helm plugin install https://github.com/aslafy-z/helm-git.git --version 0.4.2
 
 To use the plugin, you only need `git`. If you want to build the plugin from source, or you want to contribute
 to the plugin, please see [these instructions](.github/CONTRIBUTING.md).
@@ -50,7 +50,7 @@ Add your repository:
 You can use it as any other Helm chart repository. Try:
 
     $ helm search cert-manager
-    NAME                                    CHART VERSION   APP VERSION     DESCRIPTION                  
+    NAME                                    CHART VERSION   APP VERSION     DESCRIPTION
     cert-manager/cert-manager               v0.6.6          v0.6.2          A Helm chart for cert-manager
 
     $ helm install cert-manager/cert-manager --version "0.6.6"
