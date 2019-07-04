@@ -3,7 +3,7 @@ version: 2
 jobs:
   test:
     docker:
-      - image: alpine/helm:2.12.2
+      - image: alpine/helm:2.14.0
 
     steps:
       - checkout
