@@ -19,10 +19,10 @@
   "homepage": "https://github.com/aslafy-z/helm-git#readme",
   "devDependencies": {
     "bats": "github:josegonzalez/bats-core#723a1fa83524f7e2b120eddd2ca5358ca5706b4f",
-    "eclint": "^2.8.1",
-    "husky": "^2.3.0",
-    "lint-staged": "^8.1.7",
-    "shellcheck": "^0.2.3"
+    "eclint": "2.8.1",
+    "husky": "2.3.0",
+    "lint-staged": "8.1.7",
+    "shellcheck": "0.2.3"
   },
   "husky": {
     "hooks": {
