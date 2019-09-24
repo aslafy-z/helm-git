@@ -21,7 +21,7 @@
     "bats": "github:josegonzalez/bats-core#723a1fa83524f7e2b120eddd2ca5358ca5706b4f",
     "eclint": "2.8.1",
     "husky": "3.0.5",
-    "lint-staged": "9.2.5",
+    "lint-staged": "9.3.0",
     "shellcheck": "0.3.0"
   },
   "husky": {
