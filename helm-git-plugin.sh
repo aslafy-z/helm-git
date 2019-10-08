@@ -16,6 +16,8 @@ if [ "$HELM_GIT_DEBUG" = "1" ]; then
   debug=1
 fi
 
+[ $debug = 1 ] && set -x
+
 export TMPDIR=${TMPDIR:-/tmp}
 
 ## Tooling
@@ -24,6 +26,7 @@ string_starts() { [ "$(echo "$1" | cut -c 1-${#2})" = "$2" ]; }
 string_ends() { [ "$(echo "$1" | cut -c $((${#1} - ${#2} + 1))-${#1})" = "$2" ]; }
 string_contains() { echo "$1" | grep -q "$2"; }
 path_join() { echo "${1:+$1/}$2" | sed 's#//#/#g'; }
+stashdir() { mktemp -d "$TMPDIR/helm-git.XXXXXX"; }
 
 ## Logging
 
@@ -89,7 +92,7 @@ helm_package() {
   _source_path=$2
   _chart_name=$3
 
-  tmp_target="$(mktemp -d "$TMPDIR/helm-git.XXXXXX")"
+  tmp_target="$(stashdir)"
   cp -r "$_source_path" "$tmp_target/$_chart_name"
   _source_path="$tmp_target/$_chart_name"
   cd "$_target_path" >&2
@@ -148,11 +151,15 @@ main() {
   string_contains "$allowed_protocols" "$git_proto" ||
     error "$error_invalid_protocol"
 
-  readonly git_repo=$(echo "$_raw_uri" | sed -E 's#^([^/]+//[^/]+[^@\?]+)@?[^@\?]+\??.*$#\1#')
+  git_repo=$(echo "$_raw_uri" | sed -E 's#^([^/]+//[^/]+[^@\?]+)@([^@\?/]+[/?]*?)([^/]*)$#\1#')
   # TODO: Validate git_repo
-  readonly git_path=$(echo "$_raw_uri" | sed -nE 's#.*@(.*)\/.*#\1#p')
+  git_path=$(echo "$_raw_uri" | sed -E 's#^([^/]+//[^/]+[^@\?]+)@([^@\?/]+[/?]*?)([^/]*)$#\2#')
   # TODO: Validate git_path
-  readonly helm_file=$(echo "$_raw_uri" | sed 's/.*[@\/]//;s/?.*//')
+  helm_file=$(echo "$_raw_uri" | sed -E 's#^([^/]+//[^/]+[^@\?]+)@([^@\?/]+[/?]*?)([^/]*)$#\3#')
+
+  if [ -z "$helm_file" ]; then helm_file=$git_path; git_path=; fi
+
+  # readonly helm_file=$(echo "$_raw_uri" | sed 's/.*[@\/]//;s/?.*//')
 
   git_ref=$(echo "$_raw_uri" | sed '/^.*ref=\([^&#]*\).*$/!d;s//\1/')
   # TODO: Validate git_ref
@@ -183,18 +190,18 @@ main() {
   }
   trap cleanup EXIT
 
-  readonly git_root_path="$(mktemp -d "$TMPDIR/helm-git.XXXXXX")"
+  readonly git_root_path="$(stashdir)"
   readonly git_sub_path=$(path_join "$git_root_path" "$git_path")
   git_checkout "$git_sparse" "$git_root_path" "$git_repo" "$git_ref" "$git_path" ||
     error "Error while git_sparse_checkout"
 
-  readonly helm_target_path="$(mktemp -d "$TMPDIR/helm-git.XXXXXX")"
+  readonly helm_target_path="$(stashdir)"
   readonly helm_target_file="$(path_join "$helm_target_path" "$helm_file")"
 
   # Set helm home
   helm_home=$(helm home)
   if [ -z "$helm_home" ]; then
-    readonly helm_home_target_path="$(mktemp -d "$TMPDIR/helm-git.XXXXXX")"
+    readonly helm_home_target_path="$(stashdir)"
     helm_init "$helm_home_target_path" || error "Couldn't init helm"
     helm_home=$helm_home_target_path
   fi
