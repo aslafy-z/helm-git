@@ -97,7 +97,7 @@ helm_package() {
 
   # shellcheck disable=SC2086
   helm_v2 && package_args="--save=false"
-  helm package $helm_args "$package_args" "$_source_path" >/dev/null
+  helm package "$helm_args" "$package_args" "$_source_path" >/dev/null
   ret=$?
 
   rm -rf "$tmp_target"
