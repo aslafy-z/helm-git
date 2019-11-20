@@ -95,9 +95,10 @@ helm_package() {
   _source_path="$tmp_target/$_chart_name"
   cd "$_target_path" >&2
 
+  package_args=$helm_args
+  helm_v2 && package_args="$package_args --save=false"
   # shellcheck disable=SC2086
-  helm_v2 && package_args="--save=false"
-  helm package "$helm_args" "$package_args" "$_source_path" >/dev/null
+  helm package $package_args "$_source_path" >/dev/null
   ret=$?
 
   rm -rf "$tmp_target"
