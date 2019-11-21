@@ -24,6 +24,7 @@ string_starts() { [ "$(echo "$1" | cut -c 1-${#2})" = "$2" ]; }
 string_ends() { [ "$(echo "$1" | cut -c $((${#1} - ${#2} + 1))-${#1})" = "$2" ]; }
 string_contains() { echo "$1" | grep -q "$2"; }
 path_join() { echo "${1:+$1/}$2" | sed 's#//#/#g'; }
+helm_v2() { helm version -c --short | grep -q v2; }
 
 ## Logging
 
@@ -94,8 +95,10 @@ helm_package() {
   _source_path="$tmp_target/$_chart_name"
   cd "$_target_path" >&2
 
+  package_args=$helm_args
+  helm_v2 && package_args="$package_args --save=false"
   # shellcheck disable=SC2086
-  helm package $helm_args --save=false "$_source_path" >/dev/null
+  helm package $package_args "$_source_path" >/dev/null
   ret=$?
 
   rm -rf "$tmp_target"
@@ -198,7 +201,7 @@ main() {
     helm_init "$helm_home_target_path" || error "Couldn't init helm"
     helm_home=$helm_home_target_path
   fi
-  helm_args="$helm_args --home=$helm_home"
+  helm_v2 && helm_args="$helm_args --home=$helm_home"
 
   chart_search_root="$git_sub_path"
 
