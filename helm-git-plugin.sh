@@ -4,6 +4,9 @@
 
 set -e
 
+# Make sure HELM_BIN is set (normally by the helm command)
+HELM_BIN="${HELM_BIN:-helm}"
+
 readonly bin_name="helm-git"
 readonly allowed_protocols="https http file ssh"
 readonly url_prefix="git+"
@@ -24,7 +27,7 @@ string_starts() { [ "$(echo "$1" | cut -c 1-${#2})" = "$2" ]; }
 string_ends() { [ "$(echo "$1" | cut -c $((${#1} - ${#2} + 1))-${#1})" = "$2" ]; }
 string_contains() { echo "$1" | grep -q "$2"; }
 path_join() { echo "${1:+$1/}$2" | sed 's#//#/#g'; }
-helm_v2() { helm version -c --short | grep -q v2; }
+helm_v2() { $HELM_BIN version -c --short | grep -q v2; }
 
 ## Logging
 
@@ -79,7 +82,7 @@ git_checkout() {
 # helm_init(helm_home)
 helm_init() {
   _helm_home=$1
-  helm init --client-only --home "$_helm_home" >/dev/null
+  $HELM_BIN init --client-only --home "$_helm_home" >/dev/null
   HELM_HOME=$_helm_home
   export HELM_HOME
 }
@@ -98,7 +101,7 @@ helm_package() {
   package_args=$helm_args
   helm_v2 && package_args="$package_args --save=false"
   # shellcheck disable=SC2086
-  helm package $package_args "$_source_path" >/dev/null
+  $HELM_BIN package $package_args "$_source_path" >/dev/null
   ret=$?
 
   rm -rf "$tmp_target"
@@ -112,7 +115,7 @@ helm_dependency_update() {
   _target_path=$1
 
   # shellcheck disable=SC2086
-  helm dependency update $helm_args --skip-refresh "$_target_path" >/dev/null
+  $HELM_BIN dependency update $helm_args --skip-refresh "$_target_path" >/dev/null
 }
 
 # helm_index(target_path, base_url)
@@ -121,7 +124,7 @@ helm_index() {
   _base_url=$2
 
   # shellcheck disable=SC2086
-  helm repo index $helm_args --url="$_base_url" "$_target_path" >/dev/null
+  $HELM_BIN repo index $helm_args --url="$_base_url" "$_target_path" >/dev/null
 }
 
 # helm_inspect_name(source_path)
@@ -129,7 +132,7 @@ helm_inspect_name() {
   _source_path=$1
 
   # shellcheck disable=SC2086
-  output=$(helm inspect chart $helm_args "$_source_path")
+  output=$($HELM_BIN inspect chart $helm_args "$_source_path")
   name=$(echo "$output" | grep -e '^name: ' | cut -d' ' -f2)
   echo "$name"
   [ -n "$name" ]
@@ -195,7 +198,7 @@ main() {
   readonly helm_target_file="$(path_join "$helm_target_path" "$helm_file")"
 
   # Set helm home
-  helm_home=$(helm home)
+  helm_home=$($HELM_BIN home)
   if [ -z "$helm_home" ]; then
     readonly helm_home_target_path="$(mktemp -d "$TMPDIR/helm-git.XXXXXX")"
     helm_init "$helm_home_target_path" || error "Couldn't init helm"
