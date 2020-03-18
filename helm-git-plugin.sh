@@ -198,7 +198,7 @@ main() {
   readonly helm_target_file="$(path_join "$helm_target_path" "$helm_file")"
 
   # Set helm home
-  if [ -z "$helm_v2" ]; then
+  if helm_v2; then
     helm_home=$($HELM_BIN home)
     if [ -z "$helm_home" ]; then
       readonly helm_home_target_path="$(mktemp -d "$TMPDIR/helm-git.XXXXXX")"
