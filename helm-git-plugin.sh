@@ -199,12 +199,10 @@ main() {
 
   # Set helm home
   helm_v2 && helm_home=$($HELM_BIN home)
-  if [ -z helm_v2 ]; then
-    if [ -z "$helm_home" ]; then
-      readonly helm_home_target_path="$(mktemp -d "$TMPDIR/helm-git.XXXXXX")"
-      helm_init "$helm_home_target_path" || error "Couldn't init helm"
-      helm_home=$helm_home_target_path
-    fi
+  if [ -z "$helm_v2" -a -z "$helm_home" ]; then
+    readonly helm_home_target_path="$(mktemp -d "$TMPDIR/helm-git.XXXXXX")"
+    helm_init "$helm_home_target_path" || error "Couldn't init helm"
+    helm_home=$helm_home_target_path
   fi
   helm_v2 && helm_args="$helm_args --home=$helm_home"
 
