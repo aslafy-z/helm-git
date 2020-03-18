@@ -198,13 +198,15 @@ main() {
   readonly helm_target_file="$(path_join "$helm_target_path" "$helm_file")"
 
   # Set helm home
-  helm_home=$($HELM_BIN home)
-  if [ -z "$helm_home" ]; then
-    readonly helm_home_target_path="$(mktemp -d "$TMPDIR/helm-git.XXXXXX")"
-    helm_init "$helm_home_target_path" || error "Couldn't init helm"
-    helm_home=$helm_home_target_path
+  if helm_v2; then
+    helm_home=$($HELM_BIN home)
+    if [ -z "$helm_home" ]; then
+      readonly helm_home_target_path="$(mktemp -d "$TMPDIR/helm-git.XXXXXX")"
+      helm_init "$helm_home_target_path" || error "Couldn't init helm"
+      helm_home=$helm_home_target_path
+    fi
+    helm_args="$helm_args --home=$helm_home"
   fi
-  helm_v2 && helm_args="$helm_args --home=$helm_home"
 
   chart_search_root="$git_sub_path"
 
