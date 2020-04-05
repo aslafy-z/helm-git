@@ -19,7 +19,7 @@ The installation itself is simple as:
 
 You can install a specific release version:
 
-    $ helm plugin install https://github.com/aslafy-z/helm-git --version 0.6.0
+    $ helm plugin install https://github.com/aslafy-z/helm-git --version 0.7.0
 
 To use the plugin, you only need `git`. If you want to build the plugin from source, or you want to contribute
 to the plugin, please see [these instructions](.github/CONTRIBUTING.md).
