@@ -8,3 +8,4 @@ downloaders:
     - "git+file"
     - "git+ssh"
     - "git+https"
+    - "git+http"
