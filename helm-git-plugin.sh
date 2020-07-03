@@ -7,6 +7,11 @@ set -e
 # Make sure HELM_BIN is set (normally by the helm command)
 HELM_BIN="${HELM_BIN:-helm}"
 
+# if helm-diff plugin is used then HELM_BIN is pointing to diff binary
+if echo "${HELM_BIN}" | grep -q "diff"; then
+HELM_BIN="helm"
+fi
+
 readonly bin_name="helm-git"
 readonly allowed_protocols="https http file ssh"
 readonly url_prefix="git+"
