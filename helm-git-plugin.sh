@@ -8,8 +8,8 @@ set -e
 HELM_BIN="${HELM_BIN:-helm}"
 
 # if helm-diff plugin is used then HELM_BIN is pointing to diff binary
-if echo "${HELM_BIN}" | grep -q "diff"; then
-HELM_BIN="helm"
+if [ "$HELM_BIN" = "diff" ]; then
+  HELM_BIN="helm"
 fi
 
 readonly bin_name="helm-git"
