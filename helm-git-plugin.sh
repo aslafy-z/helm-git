@@ -7,8 +7,13 @@ set -e
 # Make sure HELM_BIN is set (normally by the helm command)
 HELM_BIN="${HELM_BIN:-helm}"
 
-# if helm-diff plugin is used then HELM_BIN is pointing to diff binary
-if [ "$HELM_BIN" = "diff" ]; then
+# Reset HELM_BIN to default value when it's broken
+if
+  # helm-diff plugin: https://github.com/aslafy-z/helm-git/issues/107
+  echo "$HELM_BIN" | grep -q "diff" ||
+  # terraform-provider-helm: https://github.com/aslafy-z/helm-git/issues/101
+  echo "$HELM_BIN" | grep -q "terraform-provider-helm"
+then
   HELM_BIN="helm"
 fi
 
