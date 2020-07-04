@@ -1,6 +1,6 @@
 {
   "name": "helm-git",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "description": "npm tooling for helm-git Helm downloader plugin",
   "scripts": {
     "test": "bats tests/*-*.bats",
@@ -21,7 +21,7 @@
     "bats": "github:josegonzalez/bats-core#723a1fa83524f7e2b120eddd2ca5358ca5706b4f",
     "eclint": "2.8.1",
     "husky": "4.2.5",
-    "lint-staged": "10.2.7",
+    "lint-staged": "10.2.11",
     "shellcheck": "0.4.2"
   },
   "husky": {
