@@ -7,6 +7,16 @@ set -e
 # Make sure HELM_BIN is set (normally by the helm command)
 HELM_BIN="${HELM_BIN:-helm}"
 
+# Reset HELM_BIN to default value when it's broken
+if
+  # helm-diff plugin: https://github.com/aslafy-z/helm-git/issues/107
+  echo "$HELM_BIN" | grep -q "diff" ||
+  # terraform-provider-helm: https://github.com/aslafy-z/helm-git/issues/101
+  echo "$HELM_BIN" | grep -q "terraform-provider-helm"
+then
+  HELM_BIN="helm"
+fi
+
 readonly bin_name="helm-git"
 readonly allowed_protocols="https http file ssh"
 readonly url_prefix="git+"
