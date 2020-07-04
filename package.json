@@ -34,7 +34,7 @@
       "eclint fix"
     ],
     "{helm-git,**/*.{bash,sh}}": [
-      "shellcheck"
+      "shellcheck -x"
     ]
   }
 }

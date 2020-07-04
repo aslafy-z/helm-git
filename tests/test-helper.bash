@@ -2,15 +2,17 @@
 
 export HELM_GIT_DIRNAME="$BATS_TEST_DIRNAME/.."
 
-# shellcheck disable=SC1090
+# shellcheck source=helm-git-plugin.sh
 source "$HELM_GIT_DIRNAME/helm-git-plugin.sh"
 
 function _run_helm_git() { run main '' '' '' "$1"; }
 
 setup() {
   HELM_HOME=$(mktemp -d "$BATS_TMPDIR/helm-git.helm-home.XXXXXX")
+  XDG_DATA_HOME=$HELM_HOME
   HELM_GIT_OUTPUT="$(mktemp -d "$BATS_TMPDIR/helm-git.test-output.XXXXXX")"
   export HELM_HOME
+  export XDG_DATA_HOME
   export HELM_GIT_OUTPUT
 }
 

@@ -30,7 +30,6 @@ if [ "$HELM_GIT_DEBUG" = "1" ]; then
 fi
 
 export TMPDIR=${TMPDIR:-/tmp}
-
 ## Tooling
 
 string_starts() { [ "$(echo "$1" | cut -c 1-${#2})" = "$2" ]; }
@@ -74,17 +73,21 @@ git_checkout() {
 
   cd "$_target_path" >&2
   git init --quiet
+  git config pull.ff only
   git remote add origin "$_git_repo" >&2
   if [ "$_sparse" = "1" ]; then
     git config core.sparseCheckout true
     [ -n "$_git_path" ] && echo "$_git_path/*" >.git/info/sparse-checkout
-    git pull --quiet --depth 1 origin "$_git_ref" >&2 || error \
+    git pull --quiet --depth 1 origin "$_git_ref" >&2 || \
       error "Unable to sparse-checkout. Check your Git ref ($git_ref) and path ($git_path)."
   else
-    git fetch --tags --quiet origin >&2 || error \
+    git fetch --quiet --tags origin >&2 || \
       error "Unable to fetch remote. Check your Git url."
-    git checkout --quiet "$git_ref" >&2 || error \
+    git checkout --quiet "$git_ref" >&2 || \
       error "Unable to checkout ref. Check your Git ref ($git_ref)."
+  fi
+  if [ "$(ls -A -I '.git' | wc -l)" = "0" ]; then
+    error "No files have been checked out. Check your Git ref ($git_ref) and path ($git_path)."
   fi
 }
 
@@ -192,7 +195,7 @@ main() {
 
   # Setup cleanup trap
   cleanup() {
-     rm -rf "$git_root_path" \
+    rm -rf "$git_root_path" \
       "$helm_home_target_path" \
       "$helm_target_path"
   }

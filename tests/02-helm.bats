@@ -3,7 +3,8 @@
 load 'test-helper'
 
 # helm_init(helm_home)
-@test "helm_init proprely initialize helm" {
+@test "helm_init proprely initialize helm2" {
+    helm_v2 || skip
     run helm_init "$HELM_HOME"
     [ $status = 0 ]
     [ -d "$HELM_HOME/cache" ]
@@ -15,7 +16,7 @@ load 'test-helper'
 # helm_package(target_path, source_path, chart_name)
 @test "helm_package proprely package example-chart" {
     source_path="$BATS_TEST_DIRNAME/fixtures/example-chart"
-    helm_args="--home=$HELM_HOME"
+    helm_v2 && helm_args="--home=$HELM_HOME"
     run helm_package "$HELM_GIT_OUTPUT" "$source_path" "example-chart"
     [ $status = 0 ]
     run stat "$HELM_GIT_OUTPUT/example-chart-0.1.0.tgz"
