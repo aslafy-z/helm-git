@@ -86,8 +86,8 @@ git_checkout() {
     git checkout --quiet "$git_ref" >&2 || \
       error "Unable to checkout ref. Check your Git ref ($git_ref)."
   fi
-  # shellcheck disable=SC2012
-  if [ "$(ls -A -I '.git' | wc -l)" = "0" ]; then
+  # shellcheck disable=SC2010,SC2012
+  if [ "$(ls -A | grep -v '^.git$' -c)" = "0" ]; then
     error "No files have been checked out. Check your Git ref ($git_ref) and path ($git_path)."
   fi
 }
