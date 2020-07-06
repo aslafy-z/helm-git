@@ -56,12 +56,19 @@ Fetching also works:
     $ helm fetch cert-manager/cert-manager --version "0.6.6"
     $ helm fetch git+https://github.com/jetstack/cert-manager@deploy/charts/cert-manager-v0.6.2.tgz?ref=v0.6.2
 
+### Environment
+
+**name**|**description**|**default**
+:-----:|:-----:|:-----:
+`HELM_GIT_HELM_BIN`|Path to the `helm` binary. If not set, `$HELM_BIN` will be used|`helm`
+`HELM_GIT_DEBUG`|Increase `helm-git` log level to maximum|`0`
+
 ### Arguments
 
 **name**|**description**|**default**
 :-----:|:-----:|:-----:
 ref|Set git ref to a branch or tag. Works also for commits with `sparse=0`|`master`
-sparse|Set git strategy to sparse. Will try to fetch only the needed commits for the target path.|`1`
+sparse|Set git strategy to sparse. Will try to fetch only the needed commits for the target path|`1`
 
 ### Note on Git authentication
 
