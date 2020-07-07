@@ -27,7 +27,9 @@ load 'test-helper'
 @test "helm-git fails with incorrect user defined HELM_BIN path" {
     run helm_init "$HELM_HOME"
     export HELM_GIT_HELM_BIN=/wrong/path
+    export HELM_GIT_DEBUG=1
     run _run_helm_git "git+https://github.com/jetstack/cert-manager@deploy/charts/index.yaml?ref=v0.7.0"
+    echo "$status $output"
     [ $status = 1 ]
 }
 
