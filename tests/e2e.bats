@@ -26,12 +26,14 @@ load 'test-helper'
 
 @test "helm-git fails with incorrect user defined HELM_BIN path" {
     run helm_init "$HELM_HOME"
-    run HELM_GIT_HELM_BIN=/wrong/path _run_helm_git "git+https://github.com/jetstack/cert-manager@deploy/charts/index.yaml?ref=v0.7.0"
+    export HELM_GIT_HELM_BIN=/wrong/path
+    run _run_helm_git "git+https://github.com/jetstack/cert-manager@deploy/charts/index.yaml?ref=v0.7.0"
     [ $status = 1 ]
 }
 
 @test "helm-git succeeds with correct user defined HELM_BIN path" {
     run helm_init "$HELM_HOME"
-    run HELM_GIT_HELM_BIN=$(which helm) _run_helm_git "git+https://github.com/jetstack/cert-manager@deploy/charts/index.yaml?ref=v0.7.0"
+    export HELM_GIT_HELM_BIN=helm
+    run _run_helm_git "git+https://github.com/jetstack/cert-manager@deploy/charts/index.yaml?ref=v0.7.0"
     [ $status = 0 ]
 }
