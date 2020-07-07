@@ -8,7 +8,7 @@ set -e
 if [ -n "$HELM_GIT_HELM_BIN" ]
 then
   HELM_BIN="${HELM_GIT_HELM_BIN}"
-# If not, use $HELM_BIN after sanitizing it.
+# If not, use $HELM_BIN after sanitizing it or default to 'helm'.
 elif
   [ -z "$HELM_BIN" ] ||
   # terraform-provider-helm: https://github.com/aslafy-z/helm-git/issues/101
