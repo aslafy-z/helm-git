@@ -10,6 +10,7 @@ then
   HELM_BIN="${HELM_GIT_HELM_BIN}"
 # If not, use $HELM_BIN after sanitizing it.
 elif
+  [ -z "$HELM_BIN" ] ||
   # terraform-provider-helm: https://github.com/aslafy-z/helm-git/issues/101
   echo "$HELM_BIN" | grep -q "terraform-provider-helm" ||
   # helm-diff plugin: https://github.com/aslafy-z/helm-git/issues/107
