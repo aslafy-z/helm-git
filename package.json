@@ -22,7 +22,7 @@
     "eclint": "2.8.1",
     "husky": "4.2.5",
     "lint-staged": "10.2.11",
-    "shellcheck": "0.4.2"
+    "shellcheck": "0.4.4"
   },
   "husky": {
     "hooks": {
