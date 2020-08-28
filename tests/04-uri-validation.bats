@@ -53,3 +53,8 @@ load 'test-helper'
     _run_helm_git "git+https://github.com/jetstack/cert-manager@deploy/charts/index.yaml?ref=master&sparse=1"
     [ $status = 0 ]
 }
+
+@test "should success with forward slash in ref" {
+    _run_helm_git "git+https://github.com/jaroslaw-osmanski/helm-git-test@/index.yaml?ref=feature/feature-test"
+    [ $status = 0 ]
+}

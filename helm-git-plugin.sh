@@ -169,9 +169,9 @@ main() {
 
   readonly git_repo=$(echo "$_raw_uri" | sed -E 's#^([^/]+//[^/]+[^@\?]+)@?[^@\?]+\??.*$#\1#')
   # TODO: Validate git_repo
-  readonly git_path=$(echo "$_raw_uri" | sed -E 's#.*@(.*)\/.*#\1#')
+  readonly git_path=$(echo "$_raw_uri" | sed -E 's#.*@([^?]*)\/.*#\1#')
   # TODO: Validate git_path
-  readonly helm_file=$(echo "$_raw_uri" | sed -E 's#.*@.*\/([^?]*).*#\1#')
+  readonly helm_file=$(echo "$_raw_uri" | sed -E 's#.*@[^?]*\/([^?]*).*#\1#')
 
   git_ref=$(echo "$_raw_uri" | sed '/^.*ref=\([^&#]*\).*$/!d;s//\1/')
   # TODO: Validate git_ref
