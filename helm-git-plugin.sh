@@ -204,13 +204,6 @@ main() {
   readonly helm_repo_uri="git+$git_repo@$git_path?ref=$git_ref&sparse=$git_sparse"
   debug "helm_repo_uri: $helm_repo_uri"
 
-  case "$helm_file" in
-  index.yaml) ;;
-  *.tgz) ;;
-  *) error "Target file name has to be either 'index.yaml' or a tgz release" ;;
-  esac
-
-
   # Setup cleanup trap
   cleanup() {
     rm -rf "$git_root_path" \
