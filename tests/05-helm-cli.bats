@@ -58,3 +58,15 @@ load 'test-helper'
     run "$HELM_BIN" repo remove cert-manager-v0.5.2
     [ $status = 0 ]
 }
+
+@test "helm_cli template example-chart + values" {
+    run helm_init "$HELM_HOME"
+    [ $status = 0 ]
+    run helm plugin install "$HELM_GIT_DIRNAME"
+    [ $status = 0 ]
+    run helm template \
+      --repo "git+https://github.com/aslafy-z/helm-git@tests/fixtures/example-chart?ref=master" \
+      example-chart \
+      -f "git+https://github.com/aslafy-z/helm-git@tests/fixtures/example-chart/values.yaml?ref=master"
+    [ $status = 0 ]
+}
