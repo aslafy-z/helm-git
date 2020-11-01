@@ -199,6 +199,16 @@ main() {
   readonly git_sub_path=$(path_join "$git_root_path" "$git_path")
   git_checkout "$git_sparse" "$git_root_path" "$git_repo" "$git_ref" "$git_path" ||
     error "Error while git_sparse_checkout"
+    
+  case "$helm_file" in
+  index.yaml) ;;
+  *.tgz) ;;
+  *)
+    # value files
+    cat "$git_path/$helm_file"
+    return
+    ;;
+  esac
 
   readonly helm_target_path="$(mktemp -d "$TMPDIR/helm-git.XXXXXX")"
   readonly helm_target_file="$(path_join "$helm_target_path" "$helm_file")"
