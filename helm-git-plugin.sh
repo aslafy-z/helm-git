@@ -182,9 +182,12 @@ main() {
 
   git_sparse=$(echo "$_raw_uri" | sed '/^.*sparse=\([^&#]*\).*$/!d;s//\1/')
   [ -z "$git_sparse" ] && git_sparse=1
+  
+  helm_depupdate=$(echo "$_raw_uri" | sed '/^.*depupdate=\([^&#]*\).*$/!d;s//\1/')
+  [ -z "$helm_depupdate" ] && helm_depupdate=1
 
-  debug "repo: $git_repo ref: $git_ref path: $git_path file: $helm_file sparse: $git_sparse"
-  readonly helm_repo_uri="git+$git_repo@$git_path?ref=$git_ref&sparse=$git_sparse"
+  debug "repo: $git_repo ref: $git_ref path: $git_path file: $helm_file sparse: $git_sparse depupdate: $helm_depupdate"
+  readonly helm_repo_uri="git+$git_repo@$git_path?ref=$git_ref&sparse=$git_sparse&depupdate=$helm_depupdate"
   debug "helm_repo_uri: $helm_repo_uri"
 
   case "$helm_file" in
@@ -231,8 +234,10 @@ main() {
       chart_path=$(dirname "$chart_yaml_file")
       chart_name=$(helm_inspect_name "$chart_path")
 
-      helm_dependency_update "$chart_path" ||
-        error "Error while helm_dependency_update"
+      if [ "$helm_depupdate" = "1" ]; then
+        helm_dependency_update "$chart_path" ||
+          error "Error while helm_dependency_update"
+      fi
       helm_package "$helm_target_path" "$chart_path" "$chart_name" ||
         error "Error while helm_package"
     done
