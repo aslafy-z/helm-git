@@ -55,6 +55,6 @@ load 'test-helper'
 }
 
 @test "should success with forward slash in ref" {
-    _run_helm_git "git+https://github.com/jaroslaw-osmanski/helm-git-test@/index.yaml?ref=feature/feature-test"
+    _run_helm_git "git+https://github.com/jaroslaw-osmanski/helm-git-test@test-chart/index.yaml?ref=feature/feature-test"
     [ $status = 0 ]
 }
