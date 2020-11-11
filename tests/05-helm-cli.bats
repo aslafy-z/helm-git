@@ -44,8 +44,8 @@ load 'test-helper'
     [ $status = 0 ]
     run helm repo add cert-manager-v0.5.2 "git+https://github.com/jetstack/cert-manager@contrib/charts?ref=v0.5.2"
     [ $status = 0 ]
-    run grep cert-manager-v0.5.2 "$HELM_HOME/repository/repositories.yaml"
-    [ -n "$output" ]
+    run helm repo remove cert-manager-v0.5.2
+    [ $status = 0 ]
 }
 
 @test "helm_cli repo_add cert-manager-v0.5.2 direct" {
@@ -55,6 +55,6 @@ load 'test-helper'
     [ $status = 0 ]
     run helm repo add cert-manager-v0.5.2 "git+https://github.com/jetstack/cert-manager@contrib/charts/cert-manager?ref=v0.5.2"
     [ $status = 0 ]
-    run grep cert-manager-v0.5.2 "$HELM_HOME/repository/repositories.yaml"
-    [ -n "$output" ]
+    run helm repo remove cert-manager-v0.5.2
+    [ $status = 0 ]
 }
