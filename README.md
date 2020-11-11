@@ -1,6 +1,7 @@
 # helm-git
 
-[![CircleCI](https://circleci.com/gh/aslafy-z/helm-git/tree/master.svg?style=shield)](https://circleci.com/gh/aslafy-z/helm-git/tree/master)
+
+![GitHub Actions](https://github.com/aslafy-z/helm-git/workflows/test/badge.svg?branch=master)
 [![License MIT](https://img.shields.io/badge/license-MIT-blue.svg?style=flat)](./LICENSE)
 [![GitHub release](https://img.shields.io/github/tag-date/aslafy-z/helm-git.svg)](https://github.com/aslafy-z/helm-git/releases)
 
