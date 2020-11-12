@@ -58,3 +58,14 @@ load 'test-helper'
     run grep cert-manager-v0.5.2 "$HELM_HOME/repository/repositories.yaml"
     [ -n "$output" ]
 }
+
+@test "helm_cli repo_add istio-1.5.4 depupdate=0" {
+    run helm_init "$HELM_HOME"
+    [ $status = 0 ]
+    run helm plugin install "$HELM_GIT_DIRNAME"
+    [ $status = 0 ]
+    run helm repo add istio-1.5.4 'git+https://github.com/istio/istio@install/kubernetes/helm?ref=1.5.4&sparse=0&depupdate=0'
+    [ $status = 0 ]
+    run grep istio-1.5.4 "$HELM_HOME/repository/repositories.yaml"
+    [ -n "$output" ]
+}
