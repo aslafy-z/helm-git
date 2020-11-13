@@ -60,8 +60,7 @@ Fetching also works:
 
 Pulling value files (Helm 3 only):
 
-    $ helm repo add example-repo git+https://github.com/aslafy-z/helm-git@tests/fixtures?ref=master
-    $ helm install example-repo/example-chart -f git+https://github.com/aslafy-z/helm-git@tests/fixtures/example-chart/values.yaml?ref=master
+    $ helm install . -f git+https://github.com/aslafy-z/helm-git@tests/fixtures/example-chart/values.yaml
 
 ### Environment
 
