@@ -11,6 +11,7 @@ This fits multiple use cases:
 - Need to keep charts private
 - Doesn't want to package charts before installing
 - Charts in a sub-path, or with another ref than `master`
+- Pull values files directly from (private) Git repository
 
 ## Install
 
@@ -56,6 +57,10 @@ Fetching also works:
 
     $ helm fetch cert-manager/cert-manager --version "0.6.6"
     $ helm fetch git+https://github.com/jetstack/cert-manager@deploy/charts/cert-manager-v0.6.2.tgz?ref=v0.6.2
+
+Pulling value files (Helm 3 only):
+
+    $ helm install . -f git+https://github.com/aslafy-z/helm-git@tests/fixtures/example-chart/values.yaml
 
 ### Environment
 

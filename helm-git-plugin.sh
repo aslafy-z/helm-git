@@ -204,13 +204,6 @@ main() {
   readonly helm_repo_uri="git+$git_repo@$git_path?ref=$git_ref&sparse=$git_sparse"
   debug "helm_repo_uri: $helm_repo_uri"
 
-  case "$helm_file" in
-  index.yaml) ;;
-  *.tgz) ;;
-  *) error "Target file name has to be either 'index.yaml' or a tgz release" ;;
-  esac
-
-
   # Setup cleanup trap
   cleanup() {
     rm -rf "$git_root_path" \
@@ -223,6 +216,16 @@ main() {
   readonly git_sub_path=$(path_join "$git_root_path" "$git_path")
   git_checkout "$git_sparse" "$git_root_path" "$git_repo" "$git_ref" "$git_path" ||
     error "Error while git_sparse_checkout"
+    
+  case "$helm_file" in
+  index.yaml) ;;
+  *.tgz) ;;
+  *)
+    # value files
+    cat "$git_path/$helm_file"
+    return
+    ;;
+  esac
 
   readonly helm_target_path="$(mktemp -d "$TMPDIR/helm-git.XXXXXX")"
   readonly helm_target_file="$(path_join "$helm_target_path" "$helm_file")"
