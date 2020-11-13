@@ -4,19 +4,6 @@
 
 set -e
 
-# Make sure HELM_BIN is set (normally by the helm command)
-HELM_BIN="${HELM_BIN:-helm}"
-
-# Reset HELM_BIN to default value when it's broken
-if
-  # helm-diff plugin: https://github.com/aslafy-z/helm-git/issues/107
-  echo "$HELM_BIN" | grep -q "diff" ||
-  # terraform-provider-helm: https://github.com/aslafy-z/helm-git/issues/101
-  echo "$HELM_BIN" | grep -q "terraform-provider-helm"
-then
-  HELM_BIN="helm"
-fi
-
 readonly bin_name="helm-git"
 readonly allowed_protocols="https http file ssh"
 readonly url_prefix="git+"
@@ -36,7 +23,6 @@ string_starts() { [ "$(echo "$1" | cut -c 1-${#2})" = "$2" ]; }
 string_ends() { [ "$(echo "$1" | cut -c $((${#1} - ${#2} + 1))-${#1})" = "$2" ]; }
 string_contains() { echo "$1" | grep -q "$2"; }
 path_join() { echo "${1:+$1/}$2" | sed 's#//#/#g'; }
-helm_v2() { $HELM_BIN version -c --short | grep -q v2; }
 
 ## Logging
 
@@ -92,10 +78,22 @@ git_checkout() {
   fi
 }
 
+# helm_v2()
+helm_v2() {
+  "$HELM_BIN" version -c --short | grep -q v2
+}
+
+# helm_check()
+helm_check() {
+  "$HELM_BIN" help | grep -qF "The Kubernetes package manager"
+}
+
 # helm_init(helm_home)
 helm_init() {
+  if ! helm_check; then return 1; fi
+  if ! helm_v2; then return 0; fi
   _helm_home=$1
-  $HELM_BIN init --client-only --home "$_helm_home" >/dev/null
+  "$HELM_BIN" init --client-only --home "$_helm_home" >/dev/null
   HELM_HOME=$_helm_home
   export HELM_HOME
 }
@@ -114,7 +112,7 @@ helm_package() {
   package_args=$helm_args
   helm_v2 && package_args="$package_args --save=false"
   # shellcheck disable=SC2086
-  $HELM_BIN package $package_args "$_source_path" >/dev/null
+  "$HELM_BIN" package $package_args "$_source_path" >/dev/null
   ret=$?
 
   rm -rf "$tmp_target"
@@ -128,7 +126,7 @@ helm_dependency_update() {
   _target_path=$1
 
   # shellcheck disable=SC2086
-  $HELM_BIN dependency update $helm_args --skip-refresh "$_target_path" >/dev/null
+  "$HELM_BIN" dependency update $helm_args --skip-refresh "$_target_path" >/dev/null
 }
 
 # helm_index(target_path, base_url)
@@ -137,7 +135,7 @@ helm_index() {
   _base_url=$2
 
   # shellcheck disable=SC2086
-  $HELM_BIN repo index $helm_args --url="$_base_url" "$_target_path" >/dev/null
+  "$HELM_BIN" repo index $helm_args --url="$_base_url" "$_target_path" >/dev/null
 }
 
 # helm_inspect_name(source_path)
@@ -145,7 +143,7 @@ helm_inspect_name() {
   _source_path=$1
 
   # shellcheck disable=SC2086
-  output=$($HELM_BIN inspect chart $helm_args "$_source_path")
+  output=$("$HELM_BIN" inspect chart $helm_args "$_source_path")
   name=$(echo "$output" | grep -e '^name: ' | cut -d' ' -f2)
   echo "$name"
   [ -n "$name" ]
@@ -155,6 +153,25 @@ helm_inspect_name() {
 main() {
   helm_args="" # "$1 $2 $3"
   _raw_uri=$4  # eg: git+https://git.com/user/repo@path/to/charts/index.yaml?ref=master
+
+  # If defined, use $HELM_GIT_HELM_BIN as $HELM_BIN.
+  if [ -n "$HELM_GIT_HELM_BIN" ]
+  then
+    export HELM_BIN="${HELM_GIT_HELM_BIN}"
+  # If not, use $HELM_BIN after sanitizing it or default to 'helm'.
+  elif
+    [ -z "$HELM_BIN" ] ||
+    # terraform-provider-helm: https://github.com/aslafy-z/helm-git/issues/101
+    echo "$HELM_BIN" | grep -q "terraform-provider-helm" ||
+    # helm-diff plugin: https://github.com/aslafy-z/helm-git/issues/107
+    echo "$HELM_BIN" | grep -q "diff"
+  then
+    export HELM_BIN="helm"
+  fi
+
+  if ! helm_check; then
+    error "'$HELM_BIN' is not a valid helm binary path."
+  fi
 
   # Parse URI
 
@@ -169,9 +186,9 @@ main() {
 
   readonly git_repo=$(echo "$_raw_uri" | sed -E 's#^([^/]+//[^/]+[^@\?]+)@?[^@\?]+\??.*$#\1#')
   # TODO: Validate git_repo
-  readonly git_path=$(echo "$_raw_uri" | sed -E 's#.*@([^?]*)\/.*#\1#')
+  readonly git_path=$(echo "$_raw_uri" | sed -E 's#.*@([^\?]+)\/([^\?]+).*(\?.*)?#\1#')
   # TODO: Validate git_path
-  readonly helm_file=$(echo "$_raw_uri" | sed -E 's#.*@[^?]*\/([^?]*).*#\1#')
+  readonly helm_file=$(echo "$_raw_uri" | sed -E 's#.*@([^\?]+)\/([^\?]+).*(\?.*)?#\2#')
 
   git_ref=$(echo "$_raw_uri" | sed '/^.*ref=\([^&#]*\).*$/!d;s//\1/')
   # TODO: Validate git_ref
@@ -215,7 +232,7 @@ main() {
 
   # Set helm home
   if helm_v2; then
-    helm_home=$($HELM_BIN home)
+    helm_home=$("$HELM_BIN" home)
     if [ -z "$helm_home" ]; then
       readonly helm_home_target_path="$(mktemp -d "$TMPDIR/helm-git.XXXXXX")"
       helm_init "$helm_home_target_path" || error "Couldn't init helm"

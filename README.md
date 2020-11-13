@@ -1,6 +1,7 @@
 # helm-git
 
-[![CircleCI](https://circleci.com/gh/aslafy-z/helm-git/tree/master.svg?style=shield)](https://circleci.com/gh/aslafy-z/helm-git/tree/master)
+
+![GitHub Actions](https://github.com/aslafy-z/helm-git/workflows/test/badge.svg?branch=master)
 [![License MIT](https://img.shields.io/badge/license-MIT-blue.svg?style=flat)](./LICENSE)
 [![GitHub release](https://img.shields.io/github/tag-date/aslafy-z/helm-git.svg)](https://github.com/aslafy-z/helm-git/releases)
 
@@ -15,7 +16,7 @@ This fits multiple use cases:
 
 Use `helm` CLI to install this plugin:
 
-    $ helm plugin install https://github.com/aslafy-z/helm-git --version 0.8.1
+    $ helm plugin install https://github.com/aslafy-z/helm-git --version 0.9.0
 
 To use the plugin, you only need `git`. If you want to build the plugin from source, or you want to contribute
 to the plugin, please see [these instructions](.github/CONTRIBUTING.md).
@@ -56,6 +57,13 @@ Fetching also works:
 
     $ helm fetch cert-manager/cert-manager --version "0.6.6"
     $ helm fetch git+https://github.com/jetstack/cert-manager@deploy/charts/cert-manager-v0.6.2.tgz?ref=v0.6.2
+
+### Environment
+
+**name**|**description**|**default**
+:-----:|:-----:|:-----:
+`HELM_GIT_HELM_BIN`|Path to the `helm` binary. If not set, `$HELM_BIN` will be used|`helm`
+`HELM_GIT_DEBUG`|Increase `helm-git` log level to maximum|`0`
 
 ### Arguments
 
