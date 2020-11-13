@@ -31,13 +31,14 @@ to the plugin, please see [these instructions](.github/CONTRIBUTING.md).
 
 Here's the Git urls format, followed by examples:
 
-    git+https://[provider.com]/[user]/[repo]@[path/to/charts][?[ref=git-ref]&[sparse=0]]
-    git+ssh://git@[provider.com]/[user]/[repo]@[path/to/charts][?[ref=git-ref]&[sparse=0]]
-    git+file://[path/to/repo]@[path/to/charts][?[ref=git-ref]&[sparse=0]]
+    git+https://[provider.com]/[user]/[repo]@[path/to/charts][?[ref=git-ref][&sparse=0][&depupdate=0]]
+    git+ssh://git@[provider.com]/[user]/[repo]@[path/to/charts][?[ref=git-ref][&sparse=0][&depupdate=0]]
+    git+file://[path/to/repo]@[path/to/charts][?[ref=git-ref][&sparse=0][&depupdate=0]]
 
     git+https://github.com/jetstack/cert-manager@deploy/charts?ref=v0.6.2&sparse=0
     git+ssh://git@github.com/jetstack/cert-manager@deploy/charts?ref=v0.6.2&sparse=1
     git+ssh://git@github.com/jetstack/cert-manager@deploy/charts?ref=v0.6.2
+    git+https://github.com/istio/istio@install/kubernetes/helm?ref=1.5.4&sparse=0&depupdate=0
 
 Add your repository:
 
@@ -61,7 +62,8 @@ Fetching also works:
 **name**|**description**|**default**
 :-----:|:-----:|:-----:
 ref|Set git ref to a branch or tag. Works also for commits with `sparse=0`|`master`
-sparse|Set git strategy to sparse. Will try to fetch only the needed commits for the target path.|`1`
+sparse|Set git strategy to sparse. Will try to fetch only the needed commits for the target path|`1`
+depupdate|Run `helm dependency update` on the retrieved chart|`1`
 
 ### Note on Git authentication
 
