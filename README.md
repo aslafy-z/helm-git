@@ -11,6 +11,7 @@ This fits multiple use cases:
 - Need to keep charts private
 - Doesn't want to package charts before installing
 - Charts in a sub-path, or with another ref than `master`
+- Pull values files directly from (private) Git repository
 
 ## Install
 
