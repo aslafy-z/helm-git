@@ -180,15 +180,19 @@ main() {
 
   _raw_uri=$(echo "$_raw_uri" | sed 's/^git+//')
 
-  readonly git_proto=$(echo "$_raw_uri" | cut -d':' -f1)
+  git_proto=$(echo "$_raw_uri" | cut -d':' -f1)
+  readonly git_proto=$git_proto
   string_contains "$allowed_protocols" "$git_proto" ||
     error "$error_invalid_protocol"
 
-  readonly git_repo=$(echo "$_raw_uri" | sed -E 's#^([^/]+//[^/]+[^@\?]+)@?[^@\?]+\??.*$#\1#')
+  git_repo=$(echo "$_raw_uri" | sed -E 's#^([^/]+//[^/]+[^@\?]+)@?[^@\?]+\??.*$#\1#')
+  readonly git_repo=$git_repo
   # TODO: Validate git_repo
-  readonly git_path=$(echo "$_raw_uri" | sed -E 's#.*@([^\?]+)\/([^\?]+).*(\?.*)?#\1#')
+  git_path=$(echo "$_raw_uri" | sed -E 's#.*@([^\?]+)\/([^\?]+).*(\?.*)?#\1#')
+  readonly git_path=$git_path
   # TODO: Validate git_path
-  readonly helm_file=$(echo "$_raw_uri" | sed -E 's#.*@([^\?]+)\/([^\?]+).*(\?.*)?#\2#')
+  helm_file=$(echo "$_raw_uri" | sed -E 's#.*@([^\?]+)\/([^\?]+).*(\?.*)?#\2#')
+  readonly helm_file=$helm_file
 
   git_ref=$(echo "$_raw_uri" | sed '/^.*ref=\([^&#]*\).*$/!d;s//\1/')
   # TODO: Validate git_ref
@@ -196,6 +200,7 @@ main() {
     warning "git_ref is empty, defaulted to 'master'. Prefer to pin GIT ref in URI."
     git_ref="master"
   fi
+  readonly git_ref=$git_ref
 
   git_sparse=$(echo "$_raw_uri" | sed '/^.*sparse=\([^&#]*\).*$/!d;s//\1/')
   [ -z "$git_sparse" ] && git_sparse=1
@@ -215,8 +220,10 @@ main() {
   }
   trap cleanup EXIT
 
-  readonly git_root_path="$(mktemp -d "$TMPDIR/helm-git.XXXXXX")"
-  readonly git_sub_path=$(path_join "$git_root_path" "$git_path")
+  git_root_path="$(mktemp -d "$TMPDIR/helm-git.XXXXXX")"
+  readonly git_root_path=$git_root_path
+  git_sub_path=$(path_join "$git_root_path" "$git_path")
+  readonly git_sub_path=$git_sub_path
   git_checkout "$git_sparse" "$git_root_path" "$git_repo" "$git_ref" "$git_path" ||
     error "Error while git_sparse_checkout"
     
@@ -230,14 +237,17 @@ main() {
     ;;
   esac
 
-  readonly helm_target_path="$(mktemp -d "$TMPDIR/helm-git.XXXXXX")"
-  readonly helm_target_file="$(path_join "$helm_target_path" "$helm_file")"
+  helm_target_path="$(mktemp -d "$TMPDIR/helm-git.XXXXXX")"
+  readonly helm_target_path=$helm_target_path
+  helm_target_file="$(path_join "$helm_target_path" "$helm_file")"
+  readonly helm_target_file=$helm_target_file
 
   # Set helm home
   if helm_v2; then
     helm_home=$("$HELM_BIN" home)
     if [ -z "$helm_home" ]; then
-      readonly helm_home_target_path="$(mktemp -d "$TMPDIR/helm-git.XXXXXX")"
+      helm_home_target_path="$(mktemp -d "$TMPDIR/helm-git.XXXXXX")"
+      readonly helm_home_target_path=$helm_home_target_path
       helm_init "$helm_home_target_path" || error "Couldn't init helm"
       helm_home=$helm_home_target_path
     fi
