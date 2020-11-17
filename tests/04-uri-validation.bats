@@ -59,8 +59,12 @@ load 'test-helper'
     [ $status = 0 ]
 }
 
-@test "should success with empty path" {
-    _run_helm_git "git+https://github.com/hashicorp/vault-helm@/?ref=v0.5.0"
-    echo $output
+@test "should success with empty git_path without slash" {
+    _run_helm_git "git+https://github.com/hashicorp/vault-helm@index.yaml?ref=v0.5.0"
+    [ $status = 0 ]
+}
+
+@test "should success with empty git_path with slash" {
+    _run_helm_git "git+https://github.com/hashicorp/vault-helm@/index.yaml?ref=v0.5.0"
     [ $status = 0 ]
 }
