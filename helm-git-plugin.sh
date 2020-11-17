@@ -244,6 +244,7 @@ main() {
 
   # Set helm home
   if helm_v2; then
+    debug "helm2 detected. initializing helm home"
     helm_home=$("$HELM_BIN" home)
     if [ -z "$helm_home" ]; then
       helm_home_target_path="$(mktemp -d "$TMPDIR/helm-git.XXXXXX")"
@@ -279,5 +280,6 @@ main() {
   helm_index "$helm_target_path" "$helm_repo_uri" ||
     error "Error while helm_index"
 
+  debug "helm index produced at $helm_target_file: $(cat "$helm_target_file")"
   cat "$helm_target_file"
 }
