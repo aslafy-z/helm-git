@@ -66,17 +66,17 @@ Pulling value files (Helm 3 only):
 ### Environment
 
 **name**|**description**|**default**
-:-----:|:-----:|:-----:
+--------|---------------|-----------
 `HELM_GIT_HELM_BIN`|Path to the `helm` binary. If not set, `$HELM_BIN` will be used|`helm`
 `HELM_GIT_DEBUG`|Increase `helm-git` log level to maximum|`0`
 
 ### Arguments
 
 **name**|**description**|**default**
-:-----:|:-----:|:-----:
-ref|Set git ref to a branch or tag. Works also for commits with `sparse=0`|`master`
-sparse|Set git strategy to sparse. Will try to fetch only the needed commits for the target path|`1`
-depupdate|Run `helm dependency update` on the retrieved chart|`1`
+--------|---------------|-----------
+`ref`|Set git ref to a branch or tag. Works also for commits with `sparse=0`|`master`
+`sparse`|Set git strategy to sparse. Will try to fetch only the needed commits for the target path|`1`
+`depupdate`|Run `helm dependency update` on the retrieved chart|`1`
 
 ### Note on Git authentication
 
