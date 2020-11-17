@@ -60,6 +60,6 @@ load 'test-helper'
 }
 
 @test "should success with empty path" {
-    _run_helm_git "git+https://github.com/hashicorp/vault-helm@?ref=v0.5.0"
+    _run_helm_git "git+https://github.com/hashicorp/vault-helm@/?ref=v0.5.0"
     [ $status = 0 ]
 }
