@@ -58,3 +58,8 @@ load 'test-helper'
     _run_helm_git "git+https://github.com/jaroslaw-osmanski/helm-git-test@test-chart/index.yaml?ref=feature/feature-test"
     [ $status = 0 ]
 }
+
+@test "should success with empty path" {
+    _run_helm_git "git+https://github.com/hashicorp/vault-helm@?ref=v0.5.0"
+    [ $status = 0 ]
+}
