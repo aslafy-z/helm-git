@@ -2,7 +2,7 @@
 
 ## Development
 
-`helm-git` is a little wrapper to be run by `helm`. If you want to do so, you'll have to call it as Helm does. See the doc for more precise informations: https://docs.helm.sh/using_helm/#downloader-plugins.
+`helm-git` is a little wrapper to be run by `helm`. If you want to do so, you'll have to call it as Helm does. See the doc for more precise informations: https://helm.sh/docs/topics/plugins/#downloader-plugins.
 
 ```
 # command   certFile    keyFile caFile  full-URL
