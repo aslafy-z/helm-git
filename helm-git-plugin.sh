@@ -126,7 +126,7 @@ helm_dependency_update() {
   _target_path=$1
 
   # shellcheck disable=SC2086
-  "$HELM_BIN" dependency update $helm_args --skip-refresh "$_target_path" >/dev/null
+  "$HELM_BIN" dependency update $helm_args "$_target_path" >/dev/null
 }
 
 # helm_index(target_path, base_url)
