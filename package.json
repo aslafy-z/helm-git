@@ -1,11 +1,17 @@
 {
   "name": "helm-git",
-  "version": "1.0.0",
+  "version": "0.10.0",
   "description": "npm tooling for helm-git Helm downloader plugin",
   "scripts": {
+    "prepare": "husky install",
     "test": "bats tests/*-*.bats",
     "test:e2e": "bats tests/e2e.bats",
-    "lint": "eclint check **/*; shellcheck 'helm-git' *.sh tests/*.bash"
+    "lint": "eclint check **/*; shellcheck 'helm-git' *.sh tests/*.bash",
+    "bump": "npm run bump:helm-plugin && npm run bump:readme && npm run bump:npm",
+    "bump:helm-plugin": "sed -i \"s/version: \\\".*\\\"/version: \\\"${npm_config_to}\\\"/\" plugin.yaml",
+    "bump:readme": "sed -E -i \"s/helm-git --version .+$/helm-git --version ${npm_config_to}/\" README.md",
+    "bump:npm": "npm version --no-git-tag-version ${npm_config_to}",
+    "release": "auto shipit"
   },
   "repository": {
     "type": "git",
@@ -18,16 +24,17 @@
   },
   "homepage": "https://github.com/aslafy-z/helm-git#readme",
   "devDependencies": {
-    "bats": "github:josegonzalez/bats-core#723a1fa83524f7e2b120eddd2ca5358ca5706b4f",
+    "@auto-it/conventional-commits": "^10.32.1",
+    "@auto-it/exec": "^10.32.1",
+    "@auto-it/first-time-contributor": "^10.32.1",
+    "@auto-it/git-tag": "^10.32.1",
+    "@auto-it/released": "^10.32.1",
+    "auto": "^10.32.1",
+    "bats": "1.4.1",
     "eclint": "2.8.1",
-    "husky": "4.3.0",
-    "lint-staged": "10.5.1",
-    "shellcheck": "0.4.4"
-  },
-  "husky": {
-    "hooks": {
-      "pre-commit": "lint-staged --relative"
-    }
+    "husky": "7.0.2",
+    "lint-staged": "11.2.3",
+    "shellcheck": "1.0.0"
   },
   "lint-staged": {
     "**/*": [

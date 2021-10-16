@@ -59,7 +59,7 @@ Fetching also works:
     $ helm fetch cert-manager/cert-manager --version "0.6.6"
     $ helm fetch git+https://github.com/jetstack/cert-manager@deploy/charts/cert-manager-v0.6.2.tgz?ref=v0.6.2
 
-Pulling value files (Helm 3 only):
+Pulling value files:
 
     $ helm install . -f git+https://github.com/aslafy-z/helm-git@tests/fixtures/example-chart/values.yaml
 
