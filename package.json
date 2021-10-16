@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "npm tooling for helm-git Helm downloader plugin",
   "scripts": {
+    "prepare": "husky install",
     "test": "bats tests/*-*.bats",
     "test:e2e": "bats tests/e2e.bats",
     "lint": "eclint check **/*; shellcheck 'helm-git' *.sh tests/*.bash"
@@ -18,16 +19,11 @@
   },
   "homepage": "https://github.com/aslafy-z/helm-git#readme",
   "devDependencies": {
-    "bats": "github:josegonzalez/bats-core#723a1fa83524f7e2b120eddd2ca5358ca5706b4f",
-    "eclint": "2.8.1",
-    "husky": "4.3.0",
-    "lint-staged": "10.5.3",
-    "shellcheck": "0.4.4"
-  },
-  "husky": {
-    "hooks": {
-      "pre-commit": "lint-staged --relative"
-    }
+    "bats": "^1.4.1",
+    "eclint": "^2.8.1",
+    "husky": "^7.0.2",
+    "lint-staged": "^11.2.3",
+    "shellcheck": "^1.0.0"
   },
   "lint-staged": {
     "**/*": [

@@ -1,2 +1,3 @@
-node_modules/
-tests/junit/
+/node_modules/
+/tests/junit/
+/.husky/_/
