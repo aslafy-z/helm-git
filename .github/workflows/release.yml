@@ -5,6 +5,7 @@ on: [push]
 jobs:
 
   lint:
+    name: lint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -16,6 +17,7 @@ jobs:
       - run: npm run lint
 
   test:
+    name: test
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -37,8 +39,8 @@ jobs:
       - run: npm run test:e2e
 
   release:
+    name: release
     needs: [lint, test]
-
     runs-on: ubuntu-latest
     if: "!contains(github.event.head_commit.message, 'ci skip') && !contains(github.event.head_commit.message, 'skip ci')"
     steps:
@@ -46,13 +48,11 @@ jobs:
         with:
           token: ${{ secrets.PAT_TOKEN }}
 
-      - name: Prepare repository
-        run: git fetch --unshallow --tags
+      - run: git fetch --unshallow --tags
 
       - run: npm ci
 
-      - name: Create Release
-        env:
+      - env:
           GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
         run: |
           npm run release
