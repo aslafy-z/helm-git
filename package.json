@@ -11,8 +11,7 @@
     "bump:helm-plugin": "sed -i \"s/version: \\\".*\\\"/version: \\\"${npm_config_to}\\\"/\" plugin.yaml",
     "bump:readme": "sed -E -i \"s/helm-git --version .+$/helm-git --version ${npm_config_to}/\" README.md",
     "bump:npm": "npm version --no-git-tag-version ${npm_config_to}",
-    "release": "auto shipit",
-    "semantic-release": "semantic-release"
+    "release": "semantic-release"
   },
   "repository": {
     "type": "git",
