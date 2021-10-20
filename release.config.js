@@ -1,4 +1,4 @@
-module.export = {
+module.exports = {
   release: {
     branches: ["master"]
   },
