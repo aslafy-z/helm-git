@@ -3,15 +3,15 @@ module.export = {
     branches: ["master"]
   },
   plugins: [
-    "@semantic-release/commit-analyzer",
-    "@semantic-release/release-notes-generator",
-    "@semantic-release/github",
     [
       "@semantic-release/exec",
       {
         prepare: "npm run bump --version=${nextRelease.version}",
       }
     ],
+    "@semantic-release/commit-analyzer",
+    "@semantic-release/release-notes-generator",
+    "@semantic-release/github",
     [
       "@semantic-release/npm",
       {
