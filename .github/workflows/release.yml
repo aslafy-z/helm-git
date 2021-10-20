@@ -8,14 +8,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-
-      - name: Cache node modules
-        uses: actions/cache@v1
         with:
-          path: node_modules
-          key: npm-deps-${{ hashFiles('package-lock.json') }}
-          restore-keys: |
-            npm-deps-${{ hashFiles('package-lock.json') }}
+          token: ${{ secrets.PAT_TOKEN }}
+
       - run: npm ci
 
       - run: npm run lint
@@ -25,22 +20,17 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        helm: ['2.17.0', '3.4.0']
+        helm: ['2.17.0', '3.4.2', '3.7.1']
     steps:
       - uses: actions/checkout@v2
+        with:
+          token: ${{ secrets.PAT_TOKEN }}
 
       - uses: azure/setup-helm@v1
         with:
           version: ${{ matrix.helm }}
         id: helm
 
-      - name: Cache node modules
-        uses: actions/cache@v1
-        with:
-          path: node_modules
-          key: npm-deps-${{ hashFiles('package-lock.json') }}
-          restore-keys: |
-            npm-deps-${{ hashFiles('package-lock.json') }}
       - run: npm ci
 
       - run: npm run test
@@ -59,13 +49,6 @@ jobs:
       - name: Prepare repository
         run: git fetch --unshallow --tags
 
-      - name: Cache node modules
-        uses: actions/cache@v1
-        with:
-          path: node_modules
-          key: npm-deps-${{ hashFiles('package-lock.json') }}
-          restore-keys: |
-            npm-deps-${{ hashFiles('package-lock.json') }}
       - run: npm ci
 
       - name: Create Release
