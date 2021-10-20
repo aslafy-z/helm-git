@@ -1,5 +1,6 @@
 {
   "name": "helm-git",
+  "private": true,
   "version": "0.0.0-development",
   "description": "npm tooling for helm-git Helm downloader plugin",
   "scripts": {
