@@ -93,7 +93,7 @@ helm_init() {
   if ! helm_check; then return 1; fi
   if ! helm_v2; then return 0; fi
   _helm_home=$1
-  "$HELM_BIN" init --client-only --home "$_helm_home" >/dev/null
+  "$HELM_BIN" init --client-only --stable-repo-url https://charts.helm.sh/stable --home "$_helm_home" >/dev/null
   HELM_HOME=$_helm_home
   export HELM_HOME
 }
