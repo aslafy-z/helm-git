@@ -1,6 +1,6 @@
 {
   "name": "helm-git",
-  "version": "0.10.0",
+  "version": "0.0.0-development",
   "description": "npm tooling for helm-git Helm downloader plugin",
   "scripts": {
     "prepare": "husky install",
@@ -11,11 +11,12 @@
     "bump:helm-plugin": "sed -i \"s/version: \\\".*\\\"/version: \\\"${npm_config_to}\\\"/\" plugin.yaml",
     "bump:readme": "sed -E -i \"s/helm-git --version .+$/helm-git --version ${npm_config_to}/\" README.md",
     "bump:npm": "npm version --no-git-tag-version ${npm_config_to}",
-    "release": "auto shipit"
+    "release": "auto shipit",
+    "semantic-release": "semantic-release"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/aslafy-z/helm-git.git"
+    "url": "https://github.com/aslafy-z/helm-git.git"
   },
   "author": "Zadkiel <hello@zadkiel.fr>",
   "license": "MIT",
@@ -24,16 +25,13 @@
   },
   "homepage": "https://github.com/aslafy-z/helm-git#readme",
   "devDependencies": {
-    "@auto-it/conventional-commits": "^10.32.1",
-    "@auto-it/exec": "^10.32.1",
-    "@auto-it/first-time-contributor": "^10.32.1",
-    "@auto-it/git-tag": "^10.32.1",
-    "@auto-it/released": "^10.32.1",
-    "auto": "^10.32.1",
+    "@semantic-release/exec": "^6.0.1",
     "bats": "1.4.1",
+    "conventional-changelog-conventionalcommits": "^4.6.1",
     "eclint": "2.8.1",
     "husky": "7.0.2",
     "lint-staged": "11.2.3",
+    "semantic-release": "^18.0.0",
     "shellcheck": "1.0.0"
   },
   "lint-staged": {
