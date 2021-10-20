@@ -5,13 +5,6 @@ module.export = {
   plugins: [
     "@semantic-release/commit-analyzer",
     "@semantic-release/release-notes-generator",
-    "@semantic-release/github",
-    [
-      "@semantic-release/npm",
-      {
-        npmPublish: false,
-      },
-    ],
     [
       "@semantic-release/exec",
       {
@@ -29,6 +22,13 @@ module.export = {
         ],
         message: "chore(release): update versions to ${nextRelease.version} [skip ci]"
       }
+    ],
+    "@semantic-release/github",
+    [
+      "@semantic-release/npm",
+      {
+        npmPublish: false,
+      },
     ],
   ],
   preset: "conventionalcommits",
