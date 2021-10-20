@@ -3,12 +3,6 @@ module.export = {
     branches: ["master"]
   },
   plugins: [
-    [
-      "@semantic-release/exec",
-      {
-        prepare: "npm run bump --version=${nextRelease.version}",
-      }
-    ],
     "@semantic-release/commit-analyzer",
     "@semantic-release/release-notes-generator",
     "@semantic-release/github",
@@ -17,6 +11,24 @@ module.export = {
       {
         npmPublish: false,
       },
+    ],
+    [
+      "@semantic-release/exec",
+      {
+        prepare: "npm run bump --version=${nextRelease.version}",
+      }
+    ],
+    [
+      "@semantic-release/git",
+      {
+        assets: [
+          "package.json",
+          "package-lock.json",
+          "plugin.yaml",
+          "README.md"
+        ],
+        message: "chore(release): update versions to ${nextRelease.version} [skip ci]"
+      }
     ],
   ],
   preset: "conventionalcommits",
