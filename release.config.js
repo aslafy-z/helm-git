@@ -8,7 +8,7 @@ module.exports = {
     [
       "@semantic-release/exec",
       {
-        prepareCmd: "npm run bump --version=${nextRelease.version}",
+        prepareCmd: "npm run bump-version --to=${nextRelease.version}",
       }
     ],
     [
