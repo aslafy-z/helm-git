@@ -208,11 +208,8 @@ main() {
   helm_depupdate=$(echo "$_raw_uri" | sed '/^.*depupdate=\([^&#]*\).*$/!d;s//\1/')
   [ -z "$helm_depupdate" ] && helm_depupdate=1
 
-  helm_package=$(echo "$_raw_uri" | sed '/^.*package=\([^&#]*\).*$/!d;s//\1/')
-  [ -z "$helm_package" ] && helm_package=1
-
-  debug "repo: $git_repo ref: $git_ref path: $git_path file: $helm_file sparse: $git_sparse depupdate: $helm_depupdate package: $helm_package"
-  readonly helm_repo_uri="git+$git_repo@$git_path?ref=$git_ref&sparse=$git_sparse&depupdate=$helm_depupdate&package=$helm_package"
+  debug "repo: $git_repo ref: $git_ref path: $git_path file: $helm_file sparse: $git_sparse depupdate: $helm_depupdate"
+  readonly helm_repo_uri="git+$git_repo@$git_path?ref=$git_ref&sparse=$git_sparse&depupdate=$helm_depupdate"
   debug "helm_repo_uri: $helm_repo_uri"
 
   # Setup cleanup trap
@@ -272,10 +269,8 @@ main() {
         helm_dependency_update "$chart_path" ||
           error "Error while helm_dependency_update"
       fi
-      if [ "$helm_package" = "1" ]; then
       helm_package "$helm_target_path" "$chart_path" "$chart_name" ||
         error "Error while helm_package"
-      fi
     done
   }
 
