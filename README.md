@@ -18,7 +18,7 @@ This fits multiple use cases:
 
 Use `helm` CLI to install this plugin:
 
-    helm plugin install https://github.com/aslafy-z/helm-git --version 0.10.1
+    helm plugin install https://github.com/aslafy-z/helm-git --version 0.11.0
 
 To use the plugin, you only need `git`. If you want to build the plugin from source, or you want to contribute
 to the plugin, please see [these instructions](.github/CONTRIBUTING.md).
@@ -41,7 +41,6 @@ Here's the Git urls format, followed by examples:
     git+ssh://git@github.com/jetstack/cert-manager@deploy/charts?ref=v0.6.2&sparse=1
     git+ssh://git@github.com/jetstack/cert-manager@deploy/charts?ref=v0.6.2
     git+https://github.com/istio/istio@install/kubernetes/helm?ref=1.5.4&sparse=0&depupdate=0
-    git+https://github.com/bitnami/charts@bitnami/wordpress?depupdate=0?ref=master&sparse=0&depupdate=0&package=0
 
 Add your repository:
 
@@ -78,7 +77,6 @@ Pulling value files:
 `ref`|Set git ref to a branch or tag. Works also for commits with `sparse=0`|`master`
 `sparse`|Set git strategy to sparse. Will try to fetch only the needed commits for the target path|`1`
 `depupdate`|Run `helm dependency update` on the retrieved chart|`1`
-`package`|Run `helm package` on the retrieved chart|`1`
 
 ### Note on Git authentication
 
