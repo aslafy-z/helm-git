@@ -16,7 +16,7 @@ if [ "$HELM_GIT_DEBUG" = "1" ]; then
   debug=1
 fi
 
-export TMPDIR=${TMPDIR:-/tmp}
+export TMPDIR="${TMPDIR:-/tmp}"
 ## Tooling
 
 string_starts() { [ "$(echo "$1" | cut -c 1-${#2})" = "$2" ]; }
@@ -93,7 +93,7 @@ helm_init() {
   if ! helm_check; then return 1; fi
   if ! helm_v2; then return 0; fi
   _helm_home=$1
-  "$HELM_BIN" init --client-only --home "$_helm_home" >/dev/null
+  "$HELM_BIN" init --client-only --stable-repo-url https://charts.helm.sh/stable --home "$_helm_home" >/dev/null
   HELM_HOME=$_helm_home
   export HELM_HOME
 }
@@ -181,18 +181,20 @@ main() {
   _raw_uri=$(echo "$_raw_uri" | sed 's/^git+//')
 
   git_proto=$(echo "$_raw_uri" | cut -d':' -f1)
-  readonly git_proto=$git_proto
+  readonly git_proto="$git_proto"
   string_contains "$allowed_protocols" "$git_proto" ||
     error "$error_invalid_protocol"
 
   git_repo=$(echo "$_raw_uri" | sed -E 's#^([^/]+//[^/]+[^@\?]+)@?[^@\?]+\??.*$#\1#')
-  readonly git_repo=$git_repo
+  readonly git_repo="$git_repo"
   # TODO: Validate git_repo
+
   git_path=$(echo "$_raw_uri" | sed -E 's#.*@([^\?]*)\/([^\?]*).*(\?.*)?#\1#')
-  readonly git_path=$git_path
+  readonly git_path="$git_path"
   # TODO: Validate git_path
+
   helm_file=$(echo "$_raw_uri" | sed -E 's#.*@([^\?]*)\/([^\?]*).*(\?.*)?#\2#')
-  readonly helm_file=$helm_file
+  readonly helm_file="$helm_file"
 
   git_ref=$(echo "$_raw_uri" | sed '/^.*ref=\([^&#]*\).*$/!d;s//\1/')
   # TODO: Validate git_ref
@@ -200,16 +202,19 @@ main() {
     warning "git_ref is empty, defaulted to 'master'. Prefer to pin GIT ref in URI."
     git_ref="master"
   fi
-  readonly git_ref=$git_ref
+  readonly git_ref="$git_ref"
 
   git_sparse=$(echo "$_raw_uri" | sed '/^.*sparse=\([^&#]*\).*$/!d;s//\1/')
   [ -z "$git_sparse" ] && git_sparse=1
-  
+
   helm_depupdate=$(echo "$_raw_uri" | sed '/^.*depupdate=\([^&#]*\).*$/!d;s//\1/')
   [ -z "$helm_depupdate" ] && helm_depupdate=1
 
-  debug "repo: $git_repo ref: $git_ref path: $git_path file: $helm_file sparse: $git_sparse depupdate: $helm_depupdate"
-  readonly helm_repo_uri="git+$git_repo@$git_path?ref=$git_ref&sparse=$git_sparse&depupdate=$helm_depupdate"
+  helm_package=$(echo "$_raw_uri" | sed '/^.*package=\([^&#]*\).*$/!d;s//\1/')
+  [ -z "$helm_package" ] && helm_package=1
+
+  debug "repo: $git_repo ref: $git_ref path: $git_path file: $helm_file sparse: $git_sparse depupdate: $helm_depupdate package: $helm_package"
+  readonly helm_repo_uri="git+$git_repo@$git_path?ref=$git_ref&sparse=$git_sparse&depupdate=$helm_depupdate&package=$helm_package"
   debug "helm_repo_uri: $helm_repo_uri"
 
   # Setup cleanup trap
@@ -221,12 +226,12 @@ main() {
   trap cleanup EXIT
 
   git_root_path="$(mktemp -d "$TMPDIR/helm-git.XXXXXX")"
-  readonly git_root_path=$git_root_path
+  readonly git_root_path="$git_root_path"
   git_sub_path=$(path_join "$git_root_path" "$git_path")
-  readonly git_sub_path=$git_sub_path
+  readonly git_sub_path="$git_sub_path"
   git_checkout "$git_sparse" "$git_root_path" "$git_repo" "$git_ref" "$git_path" ||
     error "Error while git_sparse_checkout"
-    
+
   case "$helm_file" in
   index.yaml) ;;
   *.tgz) ;;
@@ -238,18 +243,19 @@ main() {
   esac
 
   helm_target_path="$(mktemp -d "$TMPDIR/helm-git.XXXXXX")"
-  readonly helm_target_path=$helm_target_path
+  readonly helm_target_path="$helm_target_path"
   helm_target_file="$(path_join "$helm_target_path" "$helm_file")"
-  readonly helm_target_file=$helm_target_file
+  readonly helm_target_file="$helm_target_file"
 
   # Set helm home
   if helm_v2; then
+    debug "helm2 detected. initializing helm home"
     helm_home=$("$HELM_BIN" home)
     if [ -z "$helm_home" ]; then
       helm_home_target_path="$(mktemp -d "$TMPDIR/helm-git.XXXXXX")"
       readonly helm_home_target_path=$helm_home_target_path
       helm_init "$helm_home_target_path" || error "Couldn't init helm"
-      helm_home=$helm_home_target_path
+      helm_home="$helm_home_target_path"
     fi
     helm_args="$helm_args --home=$helm_home"
   fi
@@ -268,8 +274,10 @@ main() {
         helm_dependency_update "$chart_path" ||
           error "Error while helm_dependency_update"
       fi
+      if [ "$helm_package" = "1" ]; then
       helm_package "$helm_target_path" "$chart_path" "$chart_name" ||
         error "Error while helm_package"
+      fi
     done
   }
 
@@ -279,5 +287,6 @@ main() {
   helm_index "$helm_target_path" "$helm_repo_uri" ||
     error "Error while helm_index"
 
+  debug "helm index produced at $helm_target_file: $(cat "$helm_target_file")"
   cat "$helm_target_file"
 }

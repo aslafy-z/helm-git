@@ -1,0 +1,65 @@
+name: release
+
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+
+jobs:
+  lint:
+    name: lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - run: npm ci
+
+      - run: npm run lint
+
+  test:
+    name: test
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        helm: ['2.17.0', '3.4.2', '3.7.1']
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: azure/setup-helm@v1
+        with:
+          version: ${{ matrix.helm }}
+        id: helm
+
+      - run: npm ci
+
+      - run: npm run test
+      - run: npm run test:e2e
+
+  release:
+    name: release
+    needs: [lint, test]
+    runs-on: ubuntu-latest
+    if: "!contains(github.event.head_commit.message, 'ci skip') && !contains(github.event.head_commit.message, 'skip ci')"
+    concurrency:
+      group: release-${{ github.ref }}
+    steps:
+      # workaround for missing secret in fork PRs - see https://github.com/actions/checkout/issues/298
+      - if: github.event.pull_request.head.repo.full_name == github.repository
+        uses: actions/checkout@v2
+        with:
+          token: ${{ secrets.PAT_TOKEN }}
+
+      # in forks, the token is not available so we cannot use it
+      - if: github.event.pull_request.head.repo.full_name != github.repository
+        uses: actions/checkout@v2
+
+      - run: git fetch --unshallow --tags
+
+      - run: npm ci
+
+      - env:
+          GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
+        run: |
+          npm run release
