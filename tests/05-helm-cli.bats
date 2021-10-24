@@ -71,8 +71,7 @@ load 'test-helper'
 }
 
 @test "helm_cli repo_add wp-cff9c65 depupdate=0 package=0" {
-    run helm_init "$HELM_HOME"
-    [ $status = 0 ]
+    helm_v2 && skip
     run "$HELM_BIN" plugin install "$HELM_GIT_DIRNAME"
     [ $status = 0 ]
     run "$HELM_BIN" repo add wp-cff9c65 'git+https://github.com/bitnami/charts@bitnami/wordpress?ref=cff9c65&sparse=0&depupdate=0&package=0'
