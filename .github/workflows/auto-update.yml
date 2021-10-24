@@ -1,0 +1,12 @@
+name: auto-update
+on:
+  - push
+
+jobs:
+  auto-update:
+    name: auto-update
+    runs-on: ubuntu-latest
+    steps:
+      - uses: tibdex/auto-update@v2
+        with:
+          github_token: ${{ secrets.PAT_TOKEN }}
