@@ -73,11 +73,11 @@ load 'test-helper'
 @test "helm_cli template example-chart" {
     run helm_init "$HELM_HOME"
     [ $status = 0 ]
-    run helm plugin install "$HELM_GIT_DIRNAME"
+    run "$HELM_BIN" plugin install "$HELM_GIT_DIRNAME"
     [ $status = 0 ]
-    run helm repo add example-chart 'git+https://github.com/aslafy-z/helm-git@tests/fixtures/example-chart?ref=master'
+    run "$HELM_BIN" repo add example-chart 'git+https://github.com/aslafy-z/helm-git@tests/fixtures/example-chart?ref=master'
     [ $status = 0 ]
-    run helm template example-chart/example-chart -f 'git+https://github.com/aslafy-z/helm-git@tests/fixtures/example-chart/extra-values.yaml?ref=master' --output-dir "$HELM_GIT_OUTPUT" 
+    run "$HELM_BIN" template example-chart/example-chart -f 'git+https://github.com/aslafy-z/helm-git@tests/fixtures/example-chart/extra-values.yaml?ref=master' --output-dir "$HELM_GIT_OUTPUT" 
     [ $status = 0 ]
     run grep -q "replicas: 999" "$HELM_GIT_OUTPUT/deployment.yaml"
     [ $status = 0 ]
