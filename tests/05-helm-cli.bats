@@ -66,8 +66,8 @@ load 'test-helper'
     [ $status = 0 ]
     run "$HELM_BIN" repo add istio-1.5.4 'git+https://github.com/istio/istio@install/kubernetes/helm?ref=1.5.4&sparse=0&depupdate=0'
     [ $status = 0 ]
-    run grep -q istio-1.5.4 "$HELM_HOME/repository/repositories.yaml"
-    [ $status = 0 ]
+    run grep istio-1.5.4 "$HELM_HOME/repository/repositories.yaml"
+    [ -n "$output" ]
 }
 
 @test "helm_cli repo_add wp-cff9c65 depupdate=0 package=0" {
@@ -76,8 +76,8 @@ load 'test-helper'
     [ $status = 0 ]
     run "$HELM_BIN" repo add wp-cff9c65 'git+https://github.com/bitnami/charts@bitnami/wordpress?ref=cff9c65&sparse=0&depupdate=0&package=0'
     [ $status = 0 ]
-    run grep -q wp-cff9c65 "$HELM_HOME/repository/repositories.yaml"
-    [ $status = 0 ]
+    run grep wp-cff9c65 "$HELM_HOME/repository/repositories.yaml"
+    [ -n "$output" ]
 }
 
 @test "helm_cli template example-chart" {
@@ -89,6 +89,6 @@ load 'test-helper'
     [ $status = 0 ]
     run "$HELM_BIN" template example-chart/example-chart -f 'git+https://github.com/aslafy-z/helm-git@tests/fixtures/example-chart/extra-values.yaml?ref=6fec9ab8183d298ddb6f5908315d8d2e1ef13bbd' --output-dir "$HELM_GIT_OUTPUT"
     [ $status = 0 ]
-    run grep -q "replicas: 999" "$HELM_GIT_OUTPUT/deployment.yaml"
+    run grep -q "replicas: 999" "$HELM_GIT_OUTPUT/example-chart/templates/deployment.yaml"
     [ $status = 0 ]
 }
