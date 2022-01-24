@@ -31,7 +31,7 @@
     "conventional-changelog-conventionalcommits": "4.6.1",
     "eclint": "2.8.1",
     "husky": "7.0.2",
-    "lint-staged": "11.2.3",
+    "lint-staged": "12.3.1",
     "semantic-release": "18.0.0",
     "shellcheck": "1.0.0"
   },
