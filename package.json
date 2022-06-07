@@ -7,7 +7,7 @@
     "prepare": "husky install",
     "test": "bats tests/*-*.bats",
     "test:e2e": "bats tests/e2e.bats",
-    "lint": "eclint check **/*; shellcheck 'helm-git' *.sh tests/*.bash",
+    "lint": "editorconfig-checker; shellcheck 'helm-git' *.sh tests/*.bash",
     "bump-version": "npm run bump-version:helm-plugin && npm run bump-version:readme && npm run bump-version:npm",
     "bump-version:helm-plugin": "sed -i \"s/version: \\\".*\\\"/version: \\\"${npm_config_to}\\\"/\" plugin.yaml",
     "bump-version:readme": "sed -E -i \"s/helm-git --version .+$/helm-git --version ${npm_config_to}/\" README.md",
@@ -26,18 +26,18 @@
   "homepage": "https://github.com/aslafy-z/helm-git#readme",
   "devDependencies": {
     "@semantic-release/exec": "6.0.3",
-    "@semantic-release/git": "^10.0.1",
+    "@semantic-release/git": "10.0.1",
     "bats": "1.7.0",
     "conventional-changelog-conventionalcommits": "4.6.1",
-    "eclint": "2.8.1",
+    "editorconfig-checker": "4.0.2",
     "husky": "8.0.1",
     "lint-staged": "13.0.0",
-    "semantic-release": "18.0.0",
+    "semantic-release": "19.0.2",
     "shellcheck": "1.0.0"
   },
   "lint-staged": {
     "**/*": [
-      "eclint fix"
+      "editorconfig-checker"
     ],
     "{helm-git,**/*.{bash,sh}}": [
       "shellcheck -x"
