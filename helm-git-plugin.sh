@@ -129,11 +129,16 @@ helm_dependency_update() {
   if [ "$HELM_GIT_DEPENDENCY_CIRCUITBREAKER" = 1 ]; then
     # shellcheck disable=SC2086
     "$HELM_BIN" dependency update $helm_args --skip-refresh "$_target_path" >/dev/null
+    ret=$?
   else
     # shellcheck disable=SC2086
     "$HELM_BIN" dependency update $helm_args "$_target_path" >/dev/null
+    ret=$?
     export HELM_GIT_DEPENDENCY_CIRCUITBREAKER=1
   fi
+
+  # forward return code
+  return $ret
 }
 
 # helm_index(target_path, base_url)
