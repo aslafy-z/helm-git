@@ -26,7 +26,7 @@
   "homepage": "https://github.com/aslafy-z/helm-git#readme",
   "devDependencies": {
     "@semantic-release/exec": "6.0.3",
-    "@semantic-release/git": "^10.0.0",
+    "@semantic-release/git": "^10.0.1",
     "bats": "1.4.1",
     "conventional-changelog-conventionalcommits": "4.6.1",
     "eclint": "2.8.1",
