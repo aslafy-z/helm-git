@@ -253,7 +253,7 @@ main() {
     helm_home=$("$HELM_BIN" home)
     if [ -z "$helm_home" ]; then
       helm_home_target_path="$(mktemp -d "$TMPDIR/helm-git.XXXXXX")"
-      readonly helm_home_target_path=$helm_home_target_path
+      readonly helm_home_target_path="$helm_home_target_path"
       helm_init "$helm_home_target_path" || error "Couldn't init helm"
       helm_home="$helm_home_target_path"
     fi
