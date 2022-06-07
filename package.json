@@ -27,7 +27,7 @@
   "devDependencies": {
     "@semantic-release/exec": "6.0.3",
     "@semantic-release/git": "^10.0.1",
-    "bats": "1.4.1",
+    "bats": "1.7.0",
     "conventional-changelog-conventionalcommits": "4.6.1",
     "eclint": "2.8.1",
     "husky": "7.0.2",
