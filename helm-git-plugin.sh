@@ -83,11 +83,6 @@ helm_v2() {
   "$HELM_BIN" version -c --short | grep -q v2
 }
 
-# helm_check()
-helm_check() {
-  "$HELM_BIN" help | grep -qF "The Kubernetes package manager"
-}
-
 # helm_init(helm_home)
 helm_init() {
   if ! helm_v2; then return 0; fi
