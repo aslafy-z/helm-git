@@ -83,14 +83,8 @@ helm_v2() {
   "$HELM_BIN" version -c --short | grep -q v2
 }
 
-# helm_check()
-helm_check() {
-  "$HELM_BIN" help | grep -qF "The Kubernetes package manager"
-}
-
 # helm_init(helm_home)
 helm_init() {
-  if ! helm_check; then return 1; fi
   if ! helm_v2; then return 0; fi
   _helm_home=$1
   "$HELM_BIN" init --client-only --stable-repo-url https://charts.helm.sh/stable --home "$_helm_home" >/dev/null
@@ -179,10 +173,6 @@ main() {
     echo "$HELM_BIN" | grep -q "diff"
   then
     export HELM_BIN="helm"
-  fi
-
-  if ! helm_check; then
-    error "'$HELM_BIN' is not a valid helm binary path."
   fi
 
   # Parse URI
