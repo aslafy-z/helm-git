@@ -299,6 +299,6 @@ main() {
   helm_index "$helm_target_path" "$helm_repo_uri" ||
     error "Error while helm_index"
 
-  debug "helm index produced at $helm_target_file: $(cat "$helm_target_file")"
+  debug "helm index produced at $helm_target_file: $(tr -d '\0' < "$helm_target_file")"
   cat "$helm_target_file"
 }
