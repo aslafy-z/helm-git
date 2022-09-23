@@ -23,7 +23,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        helm: ['2.17.0', '3.4.2', '3.7.1']
+        helm: ['2.17.0', '3.4.0', '3.4.2', '3.7.1']
     env:
       FIXTURES_GIT_BRANCH: ${{ github.head_ref || github.ref_name }}
     steps:
