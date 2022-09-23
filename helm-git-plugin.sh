@@ -125,8 +125,20 @@ helm_package() {
 helm_dependency_update() {
   _target_path=$1
 
-  # shellcheck disable=SC2086
-  "$HELM_BIN" dependency update $helm_args --skip-refresh "$_target_path" >/dev/null
+  # Prevent infinity loop when calling helm-git plugin
+  if [ "$HELM_GIT_DEPENDENCY_CIRCUITBREAKER" = 1 ]; then
+    # shellcheck disable=SC2086
+    "$HELM_BIN" dependency update $helm_args --skip-refresh "$_target_path" >/dev/null
+    ret=$?
+  else
+    # shellcheck disable=SC2086
+    "$HELM_BIN" dependency update $helm_args "$_target_path" >/dev/null
+    ret=$?
+    export HELM_GIT_DEPENDENCY_CIRCUITBREAKER=1
+  fi
+
+  # forward return code
+  return $ret
 }
 
 # helm_index(target_path, base_url)
@@ -188,10 +200,12 @@ main() {
   git_repo=$(echo "$_raw_uri" | sed -E 's#^([^/]+//[^/]+[^@\?]+)@?[^@\?]+\??.*$#\1#')
   readonly git_repo="$git_repo"
   # TODO: Validate git_repo
-  git_path=$(echo "$_raw_uri" | sed -E 's#.*@([^\?]+)\/([^\?]+).*(\?.*)?#\1#')
+
+  git_path=$(echo "$_raw_uri" | sed -E 's#.*@(([^\?]*)\/)?([^\?]*).*(\?.*)?#\1#' | sed -E 's/\/$//')
   readonly git_path="$git_path"
   # TODO: Validate git_path
-  helm_file=$(echo "$_raw_uri" | sed -E 's#.*@([^\?]+)\/([^\?]+).*(\?.*)?#\2#')
+
+  helm_file=$(echo "$_raw_uri" | sed -E 's#.*@(([^\?]*)\/)?([^\?]*).*(\?.*)?#\3#')
   readonly helm_file="$helm_file"
 
   git_ref=$(echo "$_raw_uri" | sed '/^.*ref=\([^&#]*\).*$/!d;s//\1/')
@@ -251,7 +265,7 @@ main() {
     helm_home=$("$HELM_BIN" home)
     if [ -z "$helm_home" ]; then
       helm_home_target_path="$(mktemp -d "$TMPDIR/helm-git.XXXXXX")"
-      readonly helm_home_target_path=$helm_home_target_path
+      readonly helm_home_target_path="$helm_home_target_path"
       helm_init "$helm_home_target_path" || error "Couldn't init helm"
       helm_home="$helm_home_target_path"
     fi
