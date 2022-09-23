@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "example-chart-with-deps.fullname" . }}
+  labels:
+    app.kubernetes.io/name: {{ include "example-chart-with-deps.name" . }}
+    helm.sh/chart: {{ include "example-chart-with-deps.chart" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    app.kubernetes.io/name: {{ include "example-chart-with-deps.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
