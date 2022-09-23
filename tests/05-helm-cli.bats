@@ -80,7 +80,7 @@ load 'test-helper'
     [ -n "$output" ]
 }
 
-@test "helm_cli template example-chart" {
+@test "helm_cli template example-chart with remote values" {
     run helm_init "$HELM_HOME"
     [ $status = 0 ]
     run "$HELM_BIN" plugin install "$HELM_GIT_DIRNAME"
