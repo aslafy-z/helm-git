@@ -5,8 +5,8 @@
   "description": "npm tooling for helm-git Helm downloader plugin",
   "scripts": {
     "prepare": "husky install",
-    "test": "bats tests/*-*.bats",
-    "test:e2e": "bats tests/e2e.bats",
+    "test": "bats --print-output-on-failure tests/*-*.bats",
+    "test:e2e": "bats --print-output-on-failure tests/e2e.bats",
     "lint": "editorconfig-checker; shellcheck 'helm-git' *.sh tests/*.bash",
     "bump-version": "npm run bump-version:helm-plugin && npm run bump-version:readme && npm run bump-version:npm",
     "bump-version:helm-plugin": "sed -i \"s/version: \\\".*\\\"/version: \\\"${npm_config_to}\\\"/\" plugin.yaml",
