@@ -244,15 +244,10 @@ main() {
   git_checkout "$git_sparse" "$git_root_path" "$git_repo" "$git_ref" "$git_path" ||
     error "Error while git_sparse_checkout"
 
-  case "$helm_file" in
-  index.yaml) ;;
-  *.tgz) ;;
-  *)
-    # value files
+  if [ -f "$git_path/$helm_file" ]; then
     cat "$git_path/$helm_file"
     return
-    ;;
-  esac
+  fi
 
   helm_target_path="$(mktemp -d "$TMPDIR/helm-git.XXXXXX")"
   readonly helm_target_path="$helm_target_path"
