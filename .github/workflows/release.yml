@@ -24,10 +24,12 @@ jobs:
       fail-fast: false
       matrix:
         helm: ['2.17.0', '3.4.2', '3.7.1']
+    env:
+      FIXTURES_GIT_BRANCH: ${{ github.head_ref || github.ref_name }}
     steps:
       - uses: actions/checkout@v3
 
-      - uses: azure/setup-helm@v2.1
+      - uses: azure/setup-helm@v3.3
         with:
           version: ${{ matrix.helm }}
         id: helm

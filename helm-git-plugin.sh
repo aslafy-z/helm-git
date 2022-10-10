@@ -125,10 +125,10 @@ helm_dependency_update() {
     "$HELM_BIN" dependency update $helm_args --skip-refresh "$_target_path" >/dev/null
     ret=$?
   else
+    export HELM_GIT_DEPENDENCY_CIRCUITBREAKER=1
     # shellcheck disable=SC2086
     "$HELM_BIN" dependency update $helm_args "$_target_path" >/dev/null
     ret=$?
-    export HELM_GIT_DEPENDENCY_CIRCUITBREAKER=1
   fi
 
   # forward return code
@@ -234,15 +234,10 @@ main() {
   git_checkout "$git_sparse" "$git_root_path" "$git_repo" "$git_ref" "$git_path" ||
     error "Error while git_sparse_checkout"
 
-  case "$helm_file" in
-  index.yaml) ;;
-  *.tgz) ;;
-  *)
-    # value files
+  if [ -f "$git_path/$helm_file" ]; then
     cat "$git_path/$helm_file"
     return
-    ;;
-  esac
+  fi
 
   helm_target_path="$(mktemp -d "$TMPDIR/helm-git.XXXXXX")"
   readonly helm_target_path="$helm_target_path"
@@ -289,6 +284,6 @@ main() {
   helm_index "$helm_target_path" "$helm_repo_uri" ||
     error "Error while helm_index"
 
-  debug "helm index produced at $helm_target_file: $(cat "$helm_target_file")"
+  debug "helm index produced at $helm_target_file: $(tr -d '\0' < "$helm_target_file")"
   cat "$helm_target_file"
 }

@@ -1,12 +1,12 @@
 {
   "name": "helm-git",
   "private": true,
-  "version": "0.11.2",
+  "version": "0.12.0",
   "description": "npm tooling for helm-git Helm downloader plugin",
   "scripts": {
     "prepare": "husky install",
-    "test": "bats tests/*-*.bats",
-    "test:e2e": "bats tests/e2e.bats",
+    "test": "bats --print-output-on-failure tests/*-*.bats",
+    "test:e2e": "bats --print-output-on-failure tests/e2e.bats",
     "lint": "editorconfig-checker; shellcheck 'helm-git' *.sh tests/*.bash",
     "bump-version": "npm run bump-version:helm-plugin && npm run bump-version:readme && npm run bump-version:npm",
     "bump-version:helm-plugin": "sed -i \"s/version: \\\".*\\\"/version: \\\"${npm_config_to}\\\"/\" plugin.yaml",
@@ -27,12 +27,12 @@
   "devDependencies": {
     "@semantic-release/exec": "6.0.3",
     "@semantic-release/git": "10.0.1",
-    "bats": "1.7.0",
+    "bats": "1.8.0",
     "conventional-changelog-conventionalcommits": "5.0.0",
     "editorconfig-checker": "4.0.2",
     "husky": "8.0.1",
-    "lint-staged": "13.0.1",
-    "semantic-release": "19.0.3",
+    "lint-staged": "13.0.3",
+    "semantic-release": "19.0.5",
     "shellcheck": "1.1.0"
   },
   "lint-staged": {
