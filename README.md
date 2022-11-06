@@ -70,6 +70,8 @@ Pulling value files:
 --------|---------------|-----------
 `HELM_GIT_HELM_BIN`|Path to the `helm` binary. If not set, `$HELM_BIN` will be used|`helm`
 `HELM_GIT_DEBUG`|Increase `helm-git` log level to maximum|`0`
+`HELM_GIT_REPO_CACHE`|Path to use as a git repository cache to avoid fetching repos more than once or offline usage|`"" #cache disabled`
+`HELM_GIT_CHART_CACHE`|Path to use as a helm chart cache to avoid re-packaging or re-indexing charts|`"" #cache disabled`
 
 ### Arguments
 

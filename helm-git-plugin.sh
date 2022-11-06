@@ -2,7 +2,7 @@
 
 # See Helm plugins documentation: https://docs.helm.sh/using_helm/#downloader-plugins
 
-set -e
+set -euo pipefail
 
 readonly bin_name="helm-git"
 readonly allowed_protocols="https http file ssh"
@@ -17,6 +17,11 @@ if [ "$HELM_GIT_DEBUG" = "1" ]; then
 fi
 
 export TMPDIR="${TMPDIR:-/tmp}"
+
+# Cache repos or charts depending on the cache path existing in the environment variables
+CACHE_REPOS=$([ -n "${HELM_GIT_REPO_CACHE:-}" ] && echo "true" || echo "false")
+CACHE_CHARTS=$([ -n "${HELM_GIT_CHART_CACHE:-}" ] && echo "true" || echo "false")
+
 ## Tooling
 
 string_starts() { [ "$(echo "$1" | cut -c 1-${#2})" = "$2" ]; }
@@ -27,7 +32,7 @@ path_join() { echo "${1:+$1/}$2" | sed 's#//#/#g'; }
 ## Logging
 
 debug() {
-  [ $debug = 1 ] && echo "Debug in plugin '$bin_name': $*" >&2
+  [ $debug = 1 ] && echo "Debug[$$] in plugin '$bin_name': $*" >&2
   return 0
 }
 
@@ -49,6 +54,46 @@ git_try() {
   GIT_TERMINAL_PROMPT=0 git ls-remote "$_git_repo" --refs >&2 || return 1
 }
 
+
+
+#git_cache_intercept(git_repo, git_ref)
+git_cache_intercept(){
+    local -r _git_repo="${1?Missing git_repo as first parameer}"
+    local -r _git_ref="${2?Missing git_ref as second parameter}"
+    debug "Trying to intercept for ${_git_repo}#${_git_ref}"
+    local -r repo_tokens=($(echo "${_git_repo}" | sed -E -e 's/[^/]+\/\/([^@]*@)?([^/]+)\/(.+)$/\2 \3/' -e 's/\.git$//g' ))
+    local -r repo_host="${repo_tokens[0]}"
+    local -r repo_repo="${repo_tokens[1]}"
+    if [ ! -d "${HELM_GIT_REPO_CACHE}" ]; then
+        debug "HELM_GIT_REPO_CACHE:${HELM_GIT_REPO_CACHE} is not a directory, cannot cache"
+        echo ${_git_repo}
+        return
+    fi
+
+    local -r repo_path="${HELM_GIT_REPO_CACHE}/${repo_host}/${repo_repo}"
+    debug "Calculated cache path for repo ${_git_repo} is ${repo_path}"
+
+    if [ ! -d "${repo_path}" ]; then
+        debug "First time I see ${_git_repo}, fetching into ${repo_path}"
+        if ! git clone --bare --branch "${_git_ref}" "${_git_repo}" "${repo_path}" 2> /dev/null; then
+            debug "Could not clone ${_git_repo}"
+        fi
+    else
+        debug "${_git_repo} exists in cache"
+    fi
+    debug "Making sure we have the requested ref #${_git_ref}"
+    if ! GIT_REPO="${repo_path}" git tag -l "${_git_ref}" &>/dev/null; then
+        debug "Did not find ${_git_ref} in our cache for ${_git_repo}, fetching...."
+        git fetch origin --quiet "${_git_ref}"
+    else
+        debug "Ref ${_git_ref} was already cached for ${_git_repo}"
+    fi
+
+    local -r new_git_repo="file://${repo_path}"
+    debug "Returning cached repo at ${new_git_repo}"
+    echo "${new_git_repo}"
+}
+
 # git_checkout(sparse, target_path, git_repo, git_ref, git_path)
 git_checkout() {
   _sparse=$1
@@ -56,6 +101,10 @@ git_checkout() {
   _git_repo=$3
   _git_ref=$4
   _git_path=$5
+
+  if $CACHE_REPOS; then
+      _git_repo=$(git_cache_intercept ${_git_repo} ${_git_ref})
+  fi
 
   cd "$_target_path" >&2
   git init --quiet
@@ -94,9 +143,12 @@ helm_init() {
 
 # helm_package(target_path, source_path, chart_name)
 helm_package() {
-  _target_path=$1
-  _source_path=$2
-  _chart_name=$3
+  _target_path=${1?First parameter should be the target path}
+  _source_path=${2?Second parameter should be the source path}
+  _chart_name=${3?Third parameter should be the chart name}
+
+  # Ensure exists at least empty
+  helm_args=${helm_args:-}
 
   tmp_target="$(mktemp -d "$TMPDIR/helm-git.XXXXXX")"
   cp -r "$_source_path" "$tmp_target/$_chart_name"
@@ -117,15 +169,18 @@ helm_package() {
 
 # helm_dependency_update(target_path)
 helm_dependency_update() {
-  _target_path=$1
+  _target_path=${1?First argument should be the target path}
+
+  # Ensure exists at least empty
+  helm_args=${helm_args:-}
 
   # Prevent infinity loop when calling helm-git plugin
-  if [ "$HELM_GIT_DEPENDENCY_CIRCUITBREAKER" = 1 ]; then
+  if ${HELM_GIT_DEPENDENCY_CIRCUITBREAKER:-false};  then
     # shellcheck disable=SC2086
     "$HELM_BIN" dependency update $helm_args --skip-refresh "$_target_path" >/dev/null
     ret=$?
   else
-    export HELM_GIT_DEPENDENCY_CIRCUITBREAKER=1
+    export HELM_GIT_DEPENDENCY_CIRCUITBREAKER=true
     # shellcheck disable=SC2086
     "$HELM_BIN" dependency update $helm_args "$_target_path" >/dev/null
     ret=$?
@@ -140,13 +195,19 @@ helm_index() {
   _target_path=$1
   _base_url=$2
 
+  # Ensure exists at least empty
+  helm_args=${helm_args:-}
+
   # shellcheck disable=SC2086
   "$HELM_BIN" repo index $helm_args --url="$_base_url" "$_target_path" >/dev/null
 }
 
 # helm_inspect_name(source_path)
 helm_inspect_name() {
-  _source_path=$1
+  _source_path=${1?First parameter should be the source path}
+
+  # Ensure exists at least empty
+  helm_args=${helm_args:-}
 
   # shellcheck disable=SC2086
   output=$("$HELM_BIN" inspect chart $helm_args "$_source_path")
@@ -160,8 +221,10 @@ main() {
   helm_args="" # "$1 $2 $3"
   _raw_uri=$4  # eg: git+https://git.com/user/repo@path/to/charts/index.yaml?ref=master
 
+
+
   # If defined, use $HELM_GIT_HELM_BIN as $HELM_BIN.
-  if [ -n "$HELM_GIT_HELM_BIN" ]
+  if [ -n "${HELM_GIT_HELM_BIN:-}" ]
   then
     export HELM_BIN="${HELM_GIT_HELM_BIN}"
   # If not, use $HELM_BIN after sanitizing it or default to 'helm'.
@@ -219,11 +282,26 @@ main() {
   readonly helm_repo_uri="git+$git_repo@$git_path?ref=$git_ref&sparse=$git_sparse&depupdate=$helm_depupdate&package=$helm_package"
   debug "helm_repo_uri: $helm_repo_uri"
 
+  if ${CACHE_CHARTS}; then
+    local -r _request_hash=$(echo -n "${_raw_uri}" | md5sum | cut -d " " -f1)
+
+    _cache_folder="${HELM_GIT_CHART_CACHE}/${_request_hash}"
+
+    _cached_file="${_cache_folder}/${helm_file}"
+    if [ -f "${_cached_file}" ]; then
+        debug "Returning cached helm request: ${_cached_file}"
+        cat ${_cached_file}
+        return 0
+    else
+        debug "Helm request not found in cache ${_cached_file}"
+        mkdir -p "${_cache_folder}"
+    fi
+  fi
+
   # Setup cleanup trap
   cleanup() {
-    rm -rf "$git_root_path" \
-      "$helm_home_target_path" \
-      "$helm_target_path"
+    rm -rf "$git_root_path"  "${helm_home_target_path:-}"
+    ${CACHE_CHARTS} || rm -rf "${helm_target_path:-}"
   }
   trap cleanup EXIT
 
@@ -239,7 +317,12 @@ main() {
     return
   fi
 
-  helm_target_path="$(mktemp -d "$TMPDIR/helm-git.XXXXXX")"
+  if ${CACHE_CHARTS}; then
+    helm_target_path="${_cache_folder}"
+  else
+    helm_target_path="$(mktemp -d "$TMPDIR/helm-git.XXXXXX")"
+  fi
+
   readonly helm_target_path="$helm_target_path"
   helm_target_file="$(path_join "$helm_target_path" "$helm_file")"
   readonly helm_target_file="$helm_target_file"
@@ -284,6 +367,6 @@ main() {
   helm_index "$helm_target_path" "$helm_repo_uri" ||
     error "Error while helm_index"
 
-  debug "helm index produced at $helm_target_file: $(tr -d '\0' < "$helm_target_file")"
+  debug "Returning target: $helm_target_file"
   cat "$helm_target_file"
 }

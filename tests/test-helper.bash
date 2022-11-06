@@ -21,9 +21,25 @@ setup() {
   export HELM_HOME
   export XDG_DATA_HOME
   export HELM_GIT_OUTPUT
+
+  # Ensure we do not pollute runners helm repo list etc...
+  HELM_CACHE_HOME=$(mktemp -d "$BATS_TMPDIR/helm-git.helm-cache-home.XXXXXX")
+  HELM_CONFIG_HOME=$(mktemp -d "$BATS_TMPDIR/helm-git.helm-cache-home.XXXXXX")
+
+  export HELM_CACHE_HOME
+  export HELM_CONFIG_HOME
 }
 
 teardown() {
   rm -rf "$HELM_HOME"
   rm -rf "$HELM_GIT_OUTPUT"
+}
+
+enable_chart_cache() {
+    HELM_GIT_CHART_CACHE=$(mktemp -d "$BATS_TMPDIR/helm-git.chart-cache.XXXXXX")
+    export HELM_GIT_CHART_CACHE
+}
+enable_repo_cache() {
+    HELM_GIT_REPO_CACHE=$(mktemp -d "$BATS_TMPDIR/helm-git.repo-cache.XXXXXX")
+    export HELM_GIT_REPO_CACHE
 }
