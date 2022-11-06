@@ -61,9 +61,9 @@ git_cache_intercept(){
     _git_repo="${1?Missing git_repo as first parameer}"
     _git_ref="${2?Missing git_ref as second parameter}"
     debug "Trying to intercept for ${_git_repo}#${_git_ref}"
-    repo_tokens=($(echo "${_git_repo}" | sed -E -e 's/[^/]+\/\/([^@]*@)?([^/]+)\/(.+)$/\2 \3/' -e 's/\.git$//g' ))
-    repo_host="${repo_tokens[0]}"
-    repo_repo="${repo_tokens[1]}"
+    repo_tokens=$(echo "${_git_repo}" | sed -E -e 's/[^/]+\/\/([^@]*@)?([^/]+)\/(.+)$/\2 \3/' -e 's/\.git$//g' )
+    repo_host=$(echo "${repo_tokens}" | cut -d " " -f1)
+    repo_repo=$(echo "${repo_tokens}" | cut -d " " -f2)
     if [ ! -d "${HELM_GIT_REPO_CACHE}" ]; then
         debug "HELM_GIT_REPO_CACHE:${HELM_GIT_REPO_CACHE} is not a directory, cannot cache"
         echo "${_git_repo}"
