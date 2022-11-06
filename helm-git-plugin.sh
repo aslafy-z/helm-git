@@ -2,7 +2,7 @@
 
 # See Helm plugins documentation: https://docs.helm.sh/using_helm/#downloader-plugins
 
-set -euo pipefail
+set -eu
 
 readonly bin_name="helm-git"
 readonly allowed_protocols="https http file ssh"
