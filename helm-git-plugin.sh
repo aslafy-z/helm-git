@@ -58,19 +58,19 @@ git_try() {
 
 #git_cache_intercept(git_repo, git_ref)
 git_cache_intercept(){
-    local -r _git_repo="${1?Missing git_repo as first parameer}"
-    local -r _git_ref="${2?Missing git_ref as second parameter}"
+    _git_repo="${1?Missing git_repo as first parameer}"
+    _git_ref="${2?Missing git_ref as second parameter}"
     debug "Trying to intercept for ${_git_repo}#${_git_ref}"
-    local -r repo_tokens=($(echo "${_git_repo}" | sed -E -e 's/[^/]+\/\/([^@]*@)?([^/]+)\/(.+)$/\2 \3/' -e 's/\.git$//g' ))
-    local -r repo_host="${repo_tokens[0]}"
-    local -r repo_repo="${repo_tokens[1]}"
+    repo_tokens=($(echo "${_git_repo}" | sed -E -e 's/[^/]+\/\/([^@]*@)?([^/]+)\/(.+)$/\2 \3/' -e 's/\.git$//g' ))
+    repo_host="${repo_tokens[0]}"
+    repo_repo="${repo_tokens[1]}"
     if [ ! -d "${HELM_GIT_REPO_CACHE}" ]; then
         debug "HELM_GIT_REPO_CACHE:${HELM_GIT_REPO_CACHE} is not a directory, cannot cache"
-        echo ${_git_repo}
+        echo "${_git_repo}"
         return
     fi
 
-    local -r repo_path="${HELM_GIT_REPO_CACHE}/${repo_host}/${repo_repo}"
+    repo_path="${HELM_GIT_REPO_CACHE}/${repo_host}/${repo_repo}"
     debug "Calculated cache path for repo ${_git_repo} is ${repo_path}"
 
     if [ ! -d "${repo_path}" ]; then
@@ -82,14 +82,14 @@ git_cache_intercept(){
         debug "${_git_repo} exists in cache"
     fi
     debug "Making sure we have the requested ref #${_git_ref}"
-    if ! GIT_REPO="${repo_path}" git tag -l "${_git_ref}" &>/dev/null; then
+    if ! GIT_REPO="${repo_path}" git tag -l "${_git_ref}" >/dev/null 2>&1; then
         debug "Did not find ${_git_ref} in our cache for ${_git_repo}, fetching...."
         git fetch origin --quiet "${_git_ref}"
     else
         debug "Ref ${_git_ref} was already cached for ${_git_repo}"
     fi
 
-    local -r new_git_repo="file://${repo_path}"
+    new_git_repo="file://${repo_path}"
     debug "Returning cached repo at ${new_git_repo}"
     echo "${new_git_repo}"
 }
@@ -103,7 +103,7 @@ git_checkout() {
   _git_path=$5
 
   if $CACHE_REPOS; then
-      _git_repo=$(git_cache_intercept ${_git_repo} ${_git_ref})
+      _git_repo=$(git_cache_intercept "${_git_repo}" "${_git_ref}")
   fi
 
   cd "$_target_path" >&2
@@ -283,14 +283,14 @@ main() {
   debug "helm_repo_uri: $helm_repo_uri"
 
   if ${CACHE_CHARTS}; then
-    local -r _request_hash=$(echo -n "${_raw_uri}" | md5sum | cut -d " " -f1)
+    _request_hash=$(echo "${_raw_uri}" | md5sum | cut -d " " -f1)
 
     _cache_folder="${HELM_GIT_CHART_CACHE}/${_request_hash}"
 
     _cached_file="${_cache_folder}/${helm_file}"
     if [ -f "${_cached_file}" ]; then
         debug "Returning cached helm request: ${_cached_file}"
-        cat ${_cached_file}
+        cat "${_cached_file}"
         return 0
     else
         debug "Helm request not found in cache ${_cached_file}"
