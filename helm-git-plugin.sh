@@ -54,8 +54,6 @@ git_try() {
   GIT_TERMINAL_PROMPT=0 git ls-remote "$_git_repo" --refs >&2 || return 1
 }
 
-
-
 #git_cache_intercept(git_repo, git_ref)
 git_cache_intercept(){
     _git_repo="${1?Missing git_repo as first parameer}"
