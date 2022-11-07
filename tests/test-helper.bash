@@ -9,8 +9,8 @@ source "$HELM_GIT_DIRNAME/helm-git-plugin.sh"
 function _run_helm_git() { run main '' '' '' "$1"; }
 
 setup() {
-  FIXTURES_GIT_BRANCH=${FIXTURES_GIT_REPO:-"https://github.com/aslafy-z/helm-git"}
-  FIXTURES_GIT_BRANCH=${FIXTURES_GIT_REF:-"master"}
+  FIXTURES_GIT_REPO=${FIXTURES_GIT_REPO:-"https://github.com/aslafy-z/helm-git"}
+  FIXTURES_GIT_REF=${FIXTURES_GIT_REF:-"master"}
   BATS_TEST_TIMEOUT=300
   HELM_BIN=${HELM_GIT_HELM_BIN:-${HELM_BIN:-helm}}
   HELM_HOME=$(mktemp -d "$BATS_TMPDIR/helm-git.helm-home.XXXXXX")
