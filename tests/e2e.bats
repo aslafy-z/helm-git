@@ -26,14 +26,14 @@ load 'test-helper'
 @test "helm-git supports working with pre-built charts" {
     run helm_init "$HELM_HOME"
     [ $status = 0 ]
-    _run_helm_git "git+https://github.com/aslafy-z/helm-git@tests/fixtures/prebuilt-chart/index.yaml?ref=${FIXTURES_GIT_BRANCH}"
+    _run_helm_git "git+${FIXTURES_GIT_REPO}@tests/fixtures/prebuilt-chart/index.yaml?ref=${FIXTURES_GIT_REF}"
     [ $status = 0 ]
 }
 
 @test "helm-git circuit break helm dependency updates" {
     run helm_init "$HELM_HOME"
     [ $status = 0 ]
-    _run_helm_git "git+https://github.com/aslafy-z/helm-git@tests/fixtures/example-chart-with-deps/index.yaml?ref=${FIXTURES_GIT_BRANCH}"
+    _run_helm_git "git+${FIXTURES_GIT_REPO}@tests/fixtures/example-chart-with-deps/index.yaml?ref=${FIXTURES_GIT_REF}"
     [ $status = 0 ]
 }
 
