@@ -64,21 +64,23 @@ Pulling value files:
 
     helm install . -f git+https://github.com/aslafy-z/helm-git@tests/fixtures/example-chart/values.yaml
 
-### Environment
+### Environment variables
 
 **name**|**description**|**default**
 --------|---------------|-----------
-`HELM_GIT_HELM_BIN`|Path to the `helm` binary. If not set, `$HELM_BIN` will be used|`helm`
-`HELM_GIT_DEBUG`|Increase `helm-git` log level to maximum|`0`
+`HELM_GIT_HELM_BIN`|Path to the `helm` binary. If not set, `$HELM_BIN` will be used.|`helm`
+`HELM_GIT_DEBUG`|Setting this value to `1` increases `helm-git` log level to the maximum. |`0`
+`HELM_GIT_REPO_CACHE`|Path to use as a Git repository cache to avoid fetching repos more than once. If empty, caching of Git repositories is disabled.|`""`
+`HELM_GIT_CHART_CACHE`|Path to use as a Helm chart cache to avoid re-packaging/re-indexing charts. If empty, caching of Helm charts is disabled.|`""`
 
 ### Arguments
 
 **name**|**description**|**default**
 --------|---------------|-----------
-`ref`|Set git ref to a branch or tag. Works also for commits with `sparse=0`|`master`
-`sparse`|Set git strategy to sparse. Will try to fetch only the needed commits for the target path|`1`
-`depupdate`|Run `helm dependency update` on the retrieved chart|`1`
-`package`|Run `helm package` on the retrieved chart|`1`
+`ref`|Set git ref to a branch or tag. Also works for commits with `sparse=0`.|`master`
+`sparse`|Set git strategy to sparse. Will try to fetch only the needed commits for the target path. If set to `0`, default git strategy will be used.|`1`
+`depupdate`|Run `helm dependency update` on the retrieved chart. If set to `0`, this step is skipped.|`1`
+`package`|Run `helm package` on the retrieved chart. If set to `0`, this step is skipped.|`1`
 
 ### Note on Git authentication
 
