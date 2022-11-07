@@ -55,7 +55,7 @@ git_try() {
 }
 
 #git_cache_intercept(git_repo, git_ref)
-git_cache_intercept(){
+git_cache_intercept() {
     _git_repo="${1?Missing git_repo as first parameer}"
     _git_ref="${2?Missing git_ref as second parameter}"
     debug "Trying to intercept for ${_git_repo}#${_git_ref}"
