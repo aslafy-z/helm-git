@@ -12,7 +12,7 @@ readonly error_invalid_prefix="Git url should start with '$url_prefix'. Please c
 readonly error_invalid_protocol="Protocol not allowed, it should match one of theses: $allowed_protocols."
 
 debug=0
-if [ "$HELM_GIT_DEBUG" = "1" ]; then
+if [ "${HELM_GIT_DEBUG:-}" = "1" ]; then
   debug=1
 fi
 
