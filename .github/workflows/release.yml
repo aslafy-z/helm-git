@@ -25,7 +25,8 @@ jobs:
       matrix:
         helm: ['2.17.0', '3.4.2', '3.7.1']
     env:
-      FIXTURES_GIT_BRANCH: ${{ github.head_ref || github.ref_name }}
+      FIXTURES_GIT_REPO: ${{ github.event.repository.url || github.server_url + '/' + github.repository }}
+      FIXTURES_GIT_REF: ${{ github.head_ref || github.ref_name }}
     steps:
       - uses: actions/checkout@v3
 
