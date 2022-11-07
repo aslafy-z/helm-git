@@ -48,15 +48,10 @@ jobs:
     concurrency:
       group: release-${{ github.ref }}
     steps:
-      # workaround for missing secret in fork PRs - see https://github.com/actions/checkout/issues/298
       - if: github.event.pull_request.head.repo.full_name == github.repository
         uses: actions/checkout@v3
         with:
-          token: ${{ secrets.PAT_TOKEN }}
-
-      # in forks, the token is not available so we cannot use it
-      - if: github.event.pull_request.head.repo.full_name != github.repository
-        uses: actions/checkout@v3
+          token: ${{ secrets.PAT_TOKEN || github.token }}
 
       - run: git fetch --unshallow --tags
 
