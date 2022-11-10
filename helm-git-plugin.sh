@@ -73,7 +73,7 @@ git_cache_intercept() {
     repo_repo=$(echo "${repo_tokens}" | cut -d " " -f2)
     if [ ! -d "${HELM_GIT_REPO_CACHE}" ]; then
         debug "HELM_GIT_REPO_CACHE:${HELM_GIT_REPO_CACHE} is not a directory, cannot cache"
-        return -1
+        return 1
     fi
 
     repo_path="${HELM_GIT_REPO_CACHE}/${repo_host}/${repo_repo}"
@@ -82,24 +82,24 @@ git_cache_intercept() {
     if [ ! -d "${repo_path}" ]; then
         debug "First time I see ${_git_repo}, setting it up at into ${repo_path}"
         {
-            mkdir -p ${repo_path} &&
-            cd ${repo_path} &&
+            mkdir -p "${repo_path}" &&
+            cd "${repo_path}" &&
             git init --bare --quiet &&
-            git remote add origin ${_git_repo}
-        } >&2 || debug "Could not setup ${_git_repo}" && return -1
+            git remote add origin "${_git_repo}"
+        } >&2 || debug "Could not setup ${_git_repo}" && return 1
     else
         debug "${_git_repo} exists in cache"
     fi
     debug "Making sure we have the requested ref #${_git_ref}"
-    if [ -z $(GIT_DIR="${repo_path}" git tag -l "${_git_ref}") ]; then
+    if [ -z "$(GIT_DIR="${repo_path}" git tag -l "${_git_ref}")" ]; then
         debug "Did not find ${_git_ref} in our cache for ${_git_repo}, fetching...."
         # This fetches properly tags, annotated tags, branches and commits that match the name and leave them at the right place
         git_fetch_ref "${repo_path}" "${git_ref}" ||
-            debug "Could not fetch ${_git_ref}" && return -1
+            debug "Could not fetch ${_git_ref}" && return 1
     else
         debug "Ref ${_git_ref} was already cached for ${_git_repo}"
     fi
-    debug Tags in the repo: $(GIT_DIR="${repo_path}" git tag -l)
+    debug Tags in the repo: "$(GIT_DIR="${repo_path}" git tag -l)"
 
     new_git_repo="file://${repo_path}"
     debug "Returning cached repo at ${new_git_repo}"
@@ -129,7 +129,7 @@ git_checkout() {
     [ -n "$_git_path" ] && echo "$_git_path/*" >.git/info/sparse-checkout
     {
         git_fetch_ref "${PWD}/.git" "${_git_ref}" &&
-        git checkout --quiet ${_git_ref}
+        git checkout --quiet "${_git_ref}"
     } >&2 || error "Unable to sparse-checkout. Check your Git ref ($git_ref) and path ($git_path)."
   else
     git fetch --quiet --tags origin >&2 || \
