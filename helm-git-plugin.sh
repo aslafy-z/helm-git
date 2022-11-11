@@ -60,7 +60,7 @@ git_fetch_ref() {
     _git_ref="${2?Mising git ref as second parameter}"
 
     # Fetches any kind of ref to its right place, tags, annotated tags, branches and commit refs
-    GIT_DIR="${_git_repo_path}" git fetch --force --depth=1 origin "refs/*/${_git_ref}:refs/*/${_git_ref}" "${_git_ref}"
+    GIT_DIR="${_git_repo_path}" git fetch -u --depth=1 origin "refs/*/${_git_ref}:refs/*/${_git_ref}" "${_git_ref}"
 }
 
 #git_cache_intercept(git_repo, git_ref)
