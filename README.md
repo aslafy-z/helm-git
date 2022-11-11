@@ -49,7 +49,7 @@ Add your repository:
 
 You can use it as any other Helm chart repository. Try:
 
-    $ helm search cert-manager
+    $ helm search repo cert-manager
     NAME                                    CHART VERSION   APP VERSION     DESCRIPTION
     cert-manager/cert-manager               v0.6.6          v0.6.2          A Helm chart for cert-manager
 
