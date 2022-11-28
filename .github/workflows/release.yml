@@ -48,7 +48,7 @@ jobs:
     concurrency:
       group: release-${{ github.ref }}
     steps:
-      - if: github.event.pull_request.head.repo.full_name == github.repository
+      - if: github.event_name	== 'push' || github.event.pull_request.head.repo.full_name == github.repository
         uses: actions/checkout@v3
         with:
           token: ${{ secrets.PAT_TOKEN || github.token }}
