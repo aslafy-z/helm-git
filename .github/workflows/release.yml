@@ -44,14 +44,15 @@ jobs:
     name: release
     needs: [lint, test]
     runs-on: ubuntu-latest
-    if: "!contains(github.event.head_commit.message, 'ci skip') && !contains(github.event.head_commit.message, 'skip ci')"
+    if: |
+      (!contains(github.event.head_commit.message, 'ci skip') && !contains(github.event.head_commit.message, 'skip ci')) &&
+      github.event_name == 'push' && github.ref == 'refs/heads/master'
     concurrency:
       group: release-${{ github.ref }}
     steps:
-      - if: github.event_name	== 'push' || github.event.pull_request.head.repo.full_name == github.repository
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
         with:
-          token: ${{ secrets.PAT_TOKEN || github.token }}
+          token: ${{ github.token }}
 
       - run: git fetch --unshallow --tags
 
