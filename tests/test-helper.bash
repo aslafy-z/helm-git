@@ -32,8 +32,12 @@ setup() {
 }
 
 teardown() {
-  rm -rf "$HELM_HOME"
-  rm -rf "$HELM_GIT_OUTPUT"
+  [ "$BATS_TEST_COMPLETED" = "1" ] || {
+    rm -rf "$HELM_HOME"
+    rm -rf "$HELM_GIT_OUTPUT"
+    rm -rf "$HELM_CACHE_HOME"
+    rm -rf "$HELM_CONFIG_HOME"
+  }
 }
 
 enable_chart_cache() {
