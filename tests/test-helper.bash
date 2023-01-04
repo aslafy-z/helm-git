@@ -32,7 +32,7 @@ setup() {
 }
 
 teardown() {
-  [ $BATS_TEST_COMPLETED = 1 ] || {
+  [ "$BATS_TEST_COMPLETED" = "1" ] || {
     rm -rf "$HELM_HOME"
     rm -rf "$HELM_GIT_OUTPUT"
     rm -rf "$HELM_CACHE_HOME"
