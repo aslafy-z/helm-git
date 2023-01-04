@@ -297,8 +297,8 @@ main() {
   fi
 
   # Setup cleanup trap
+  # shellcheck disable=SC2317
   cleanup() {
-    # shellcheck disable=SC2317
     rm -rf "$git_root_path"  "${helm_home_target_path:-}"
     ${CACHE_CHARTS} || rm -rf "${helm_target_path:-}"
   }
