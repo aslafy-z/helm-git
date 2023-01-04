@@ -6,6 +6,8 @@
   "scripts": {
     "prepare": "husky install",
     "test": "bats --print-output-on-failure tests/*-*.bats",
+    "testx": "bats --print-output-on-failure tests/test.bats",
+    "test:cli": "bats --print-output-on-failure tests/*-cli.bats",
     "test:e2e": "bats --print-output-on-failure tests/e2e.bats",
     "lint": "editorconfig-checker; shellcheck 'helm-git' *.sh tests/*.bash",
     "bump-version": "npm run bump-version:helm-plugin && npm run bump-version:readme && npm run bump-version:npm",
