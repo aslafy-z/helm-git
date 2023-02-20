@@ -13,7 +13,9 @@ labels: 'bug'
 -->
 
 
-`helm-git` version:
+Helm version: 
+`helm-git` version: 
+Git version: 
 
 ## Steps To Reproduce
 
