@@ -268,7 +268,7 @@ main() {
   readonly git_ref="$git_ref"
 
   git_sparse=$(echo "$_raw_uri" | sed '/^.*sparse=\([^&#]*\).*$/!d;s//\1/')
-  [ -z "$git_sparse" ] && git_sparse=1
+  [ -z "$git_sparse" ] && git_sparse=0
 
   helm_depupdate=$(echo "$_raw_uri" | sed '/^.*depupdate=\([^&#]*\).*$/!d;s//\1/')
   [ -z "$helm_depupdate" ] && helm_depupdate=1
