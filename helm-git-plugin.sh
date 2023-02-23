@@ -257,7 +257,7 @@ main() {
   git_file_path=$(echo "${_uri_path}" | cut -d'@' -f 2)
   readonly git_file_path="$git_file_path"
 
-  helm_dir=$(dirname "${git_file_path}")
+  helm_dir=$(dirname "${git_file_path}" | sed -r '/^[\.|/]$/d')
   readonly helm_dir="$helm_dir"
 
   helm_file=$(basename "${git_file_path}")
