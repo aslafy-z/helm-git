@@ -1,7 +1,7 @@
 {
   "name": "helm-git",
   "private": true,
-  "version": "0.14.3",
+  "version": "0.15.0",
   "description": "npm tooling for helm-git Helm downloader plugin",
   "scripts": {
     "prepare": "husky install",
