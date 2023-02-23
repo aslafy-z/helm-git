@@ -239,6 +239,7 @@ main() {
   string_starts "$_raw_uri" "$url_prefix" ||
     error "Invalid format, got '$_raw_uri'. $error_invalid_prefix"
 
+  # Thanks to https://stackoverflow.com/a/63993578
   readonly URI_REGEX='^([^:/?#]+):(//((([^/?#]+)@)?([^/?#]+)?))?(/([^?#]*))(\?([^#]*))?(#(.*))?$'
   readonly _uri_scheme=$(echo "$_raw_uri" | sed -Ene "s'$URI_REGEX'\1'p")
   readonly _uri_authority=$(echo "$_raw_uri" | sed -Ene "s'$URI_REGEX'\3'p")
