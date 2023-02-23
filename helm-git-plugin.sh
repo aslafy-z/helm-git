@@ -253,7 +253,7 @@ main() {
     error "$error_invalid_protocol"
 
   git_repo_path=$(echo "${_uri_path}" | cut -d'@' -f 1)
-  readonly git_repo_path="$git_path"
+  readonly git_repo_path="$git_repo_path"
 
   git_file_path=$(echo "${_uri_path}" | cut -d'@' -f 2)
   readonly git_file_path="$git_file_path"
@@ -281,8 +281,8 @@ main() {
   helm_package=$(echo "$_uri_query" | sed '/^.*package=\([^&#]*\).*$/!d;s//\1/')
   [ -z "$helm_package" ] && helm_package=1
 
-  debug "repo: $git_repo ref: $git_ref path: $git_path file: $helm_file sparse: $git_sparse depupdate: $helm_depupdate package: $helm_package"
-  readonly helm_repo_uri="git+$git_repo@$git_path?ref=$git_ref&sparse=$git_sparse&depupdate=$helm_depupdate&package=$helm_package"
+  debug "repo: $git_repo ref: $git_ref path: $git_file_path file: $helm_file sparse: $git_sparse depupdate: $helm_depupdate package: $helm_package"
+  readonly helm_repo_uri="git+$git_repo@$git_file_path?ref=$git_ref&sparse=$git_sparse&depupdate=$helm_depupdate&package=$helm_package"
   debug "helm_repo_uri: $helm_repo_uri"
 
   if ${CACHE_CHARTS}; then
@@ -311,13 +311,13 @@ main() {
 
   git_root_path="$(mktemp -d "$TMPDIR/helm-git.XXXXXX")"
   readonly git_root_path="$git_root_path"
-  git_sub_path=$(path_join "$git_root_path" "$git_path")
+  git_sub_path=$(path_join "$git_root_path" "$git_file_path")
   readonly git_sub_path="$git_sub_path"
-  git_checkout "$git_sparse" "$git_root_path" "$git_repo" "$git_ref" "$git_path" ||
+  git_checkout "$git_sparse" "$git_root_path" "$git_repo" "$git_ref" "$git_file_path" ||
     error "Error while git_sparse_checkout"
 
-  if [ -f "$git_path/$helm_file" ]; then
-    cat "$git_path/$helm_file"
+  if [ -f "$git_file_path/$helm_file" ]; then
+    cat "$git_file_path/$helm_file"
     return
   fi
 
