@@ -241,25 +241,30 @@ main() {
   string_starts "$_raw_uri" "$url_prefix" ||
     error "Invalid format, got '$_raw_uri'. $error_invalid_prefix"
 
-  _raw_uri=$(echo "$_raw_uri" | sed 's/^git+//')
+  readonly URI_REGEX='^([^:/?#]+):(//((([^/?#]+)@)?([^/?#]+)?))?(/([^?#]*))(\?([^#]*))?(#(.*))?$'
+  readonly _uri_scheme=$(echo "$_raw_uri" | sed -Ene "s!$URI_REGEX!\1!p")
+  readonly _uri_authority=$(echo "$_raw_uri" | sed -Ene "s!$URI_REGEX!\3!p")
+  readonly _uri_path=$(echo "$_raw_uri" | sed -Ene "s!$URI_REGEX!\8!p")
+  readonly _uri_query=$(echo "$_raw_uri" | sed -Ene "s!$URI_REGEX!\9!p")
 
-  git_proto=$(echo "$_raw_uri" | cut -d':' -f1)
-  readonly git_proto="$git_proto"
-  string_contains "$allowed_protocols" "$git_proto" ||
+  git_scheme=$(echo "$_uri_scheme" | sed -Ene 's/^git+//')
+  readonly git_scheme="$git_scheme"
+  string_contains "$allowed_protocols" "$git_scheme" ||
     error "$error_invalid_protocol"
 
-  git_repo=$(echo "$_raw_uri" | sed -E 's#^([^/]+//[^/]+[^@\?]+)@?[^@\?]+\??.*$#\1#')
-  readonly git_repo="$git_repo"
-  # TODO: Validate git_repo
+  git_repo_path=$(echo "${_uri_path}" | cut -d'@' -f 1)
+  readonly git_repo_path="$git_path"
 
-  git_path=$(echo "$_raw_uri" | sed -E 's#.*@(([^\?]*)\/)?([^\?]*).*(\?.*)?#\1#' | sed -E 's/\/$//')
-  readonly git_path="$git_path"
-  # TODO: Validate git_path
+  git_file_path=$(echo "${_uri_path}" | cut -d'@' -f 2)
+  readonly git_file_path="$git_file_path"
 
-  helm_file=$(echo "$_raw_uri" | sed -E 's#.*@(([^\?]*)\/)?([^\?]*).*(\?.*)?#\3#')
+  helm_file=$(basename "${git_file_path}")
   readonly helm_file="$helm_file"
 
-  git_ref=$(echo "$_raw_uri" | sed '/^.*ref=\([^&#]*\).*$/!d;s//\1/')
+  git_repo="${git_scheme}://${_uri_authority}/${git_repo_path}"
+  readonly git_repo="$git_repo"
+
+  git_ref=$(echo "$_uri_query" | sed '/^.*ref=\([^&#]*\).*$/!d;s//\1/')
   # TODO: Validate git_ref
   if [ -z "$git_ref" ]; then
     warning "git_ref is empty, defaulted to 'master'. Prefer to pin GIT ref in URI."
@@ -267,13 +272,13 @@ main() {
   fi
   readonly git_ref="$git_ref"
 
-  git_sparse=$(echo "$_raw_uri" | sed '/^.*sparse=\([^&#]*\).*$/!d;s//\1/')
+  git_sparse=$(echo "$_uri_query" | sed '/^.*sparse=\([^&#]*\).*$/!d;s//\1/')
   [ -z "$git_sparse" ] && git_sparse=1
 
-  helm_depupdate=$(echo "$_raw_uri" | sed '/^.*depupdate=\([^&#]*\).*$/!d;s//\1/')
+  helm_depupdate=$(echo "$_uri_query" | sed '/^.*depupdate=\([^&#]*\).*$/!d;s//\1/')
   [ -z "$helm_depupdate" ] && helm_depupdate=1
 
-  helm_package=$(echo "$_raw_uri" | sed '/^.*package=\([^&#]*\).*$/!d;s//\1/')
+  helm_package=$(echo "$_uri_query" | sed '/^.*package=\([^&#]*\).*$/!d;s//\1/')
   [ -z "$helm_package" ] && helm_package=1
 
   debug "repo: $git_repo ref: $git_ref path: $git_path file: $helm_file sparse: $git_sparse depupdate: $helm_depupdate package: $helm_package"
