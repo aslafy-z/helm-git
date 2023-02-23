@@ -242,12 +242,12 @@ main() {
     error "Invalid format, got '$_raw_uri'. $error_invalid_prefix"
 
   readonly URI_REGEX='^([^:/?#]+):(//((([^/?#]+)@)?([^/?#]+)?))?(/([^?#]*))(\?([^#]*))?(#(.*))?$'
-  readonly _uri_scheme=$(echo "$_raw_uri" | sed -Ene "s!$URI_REGEX!\1!p")
-  readonly _uri_authority=$(echo "$_raw_uri" | sed -Ene "s!$URI_REGEX!\3!p")
-  readonly _uri_path=$(echo "$_raw_uri" | sed -Ene "s!$URI_REGEX!\8!p")
-  readonly _uri_query=$(echo "$_raw_uri" | sed -Ene "s!$URI_REGEX!\9!p")
+  readonly _uri_scheme=$(echo "$_raw_uri" | sed -Ene "s'$URI_REGEX'\1'p")
+  readonly _uri_authority=$(echo "$_raw_uri" | sed -Ene "s'$URI_REGEX'\3'p")
+  readonly _uri_path=$(echo "$_raw_uri" | sed -Ene "s'$URI_REGEX'\8'p")
+  readonly _uri_query=$(echo "$_raw_uri" | sed -Ene "s'$URI_REGEX'\9'p")
 
-  git_scheme=$(echo "$_uri_scheme" | sed -Ene 's/^git+//')
+  git_scheme=$(echo "$_uri_scheme" | sed -e 's/^git+//')
   readonly git_scheme="$git_scheme"
   string_contains "$allowed_protocols" "$git_scheme" ||
     error "$error_invalid_protocol"
