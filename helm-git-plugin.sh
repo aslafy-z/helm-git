@@ -112,7 +112,7 @@ git_checkout() {
     git config core.sparseCheckout true
     [ -n "$_git_path" ] && echo "$_git_path/*" >.git/info/sparse-checkout
     git pull --quiet --depth 1 origin "$_git_ref" >&2 || \
-      error "Unable to sparse-checkout. Check your Git ref ($git_ref) and path ($git_path)."
+      error "Unable to sparse-checkout. Check your Git ref ($_git_ref) and path ($_git_path)."
   else
     git fetch --quiet --tags origin >&2 || \
       error "Unable to fetch remote. Check your Git url."
@@ -121,7 +121,7 @@ git_checkout() {
   fi
   # shellcheck disable=SC2010,SC2012
   if [ "$(ls -A | grep -v '^.git$' -c)" = "0" ]; then
-    error "No files have been checked out. Check your Git ref ($git_ref) and path ($git_path)."
+    error "No files have been checked out. Check your Git ref ($_git_ref) and path ($_git_path)."
   fi
 }
 
