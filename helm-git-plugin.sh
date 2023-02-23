@@ -220,7 +220,6 @@ main() {
   _raw_uri=$4  # eg: git+https://git.com/user/repo@path/to/charts/index.yaml?ref=master
 
 
-
   # If defined, use $HELM_GIT_HELM_BIN as $HELM_BIN.
   if [ -n "${HELM_GIT_HELM_BIN:-}" ]
   then
@@ -237,7 +236,6 @@ main() {
   fi
 
   # Parse URI
-
   string_starts "$_raw_uri" "$url_prefix" ||
     error "Invalid format, got '$_raw_uri'. $error_invalid_prefix"
 
@@ -257,6 +255,9 @@ main() {
 
   git_file_path=$(echo "${_uri_path}" | cut -d'@' -f 2)
   readonly git_file_path="$git_file_path"
+
+  helm_dir=$(dirname "${git_file_path}")
+  readonly helm_dir="$helm_dir"
 
   helm_file=$(basename "${git_file_path}")
   readonly helm_file="$helm_file"
@@ -281,8 +282,8 @@ main() {
   helm_package=$(echo "$_uri_query" | sed '/^.*package=\([^&#]*\).*$/!d;s//\1/')
   [ -z "$helm_package" ] && helm_package=1
 
-  debug "repo: $git_repo ref: $git_ref path: $git_file_path file: $helm_file sparse: $git_sparse depupdate: $helm_depupdate package: $helm_package"
-  readonly helm_repo_uri="git+$git_repo@$git_file_path?ref=$git_ref&sparse=$git_sparse&depupdate=$helm_depupdate&package=$helm_package"
+  debug "repo: $git_repo ref: $git_ref path: $helm_dir file: $helm_file sparse: $git_sparse depupdate: $helm_depupdate package: $helm_package"
+  readonly helm_repo_uri="git+$git_repo@$helm_dir?ref=$git_ref&sparse=$git_sparse&depupdate=$helm_depupdate&package=$helm_package"
   debug "helm_repo_uri: $helm_repo_uri"
 
   if ${CACHE_CHARTS}; then
@@ -311,13 +312,13 @@ main() {
 
   git_root_path="$(mktemp -d "$TMPDIR/helm-git.XXXXXX")"
   readonly git_root_path="$git_root_path"
-  git_sub_path=$(path_join "$git_root_path" "$git_file_path")
+  git_sub_path=$(path_join "$git_root_path" "$helm_dir")
   readonly git_sub_path="$git_sub_path"
-  git_checkout "$git_sparse" "$git_root_path" "$git_repo" "$git_ref" "$git_file_path" ||
+  git_checkout "$git_sparse" "$git_root_path" "$git_repo" "$git_ref" "$helm_dir" ||
     error "Error while git_sparse_checkout"
 
-  if [ -f "$git_file_path/$helm_file" ]; then
-    cat "$git_file_path/$helm_file"
+  if [ -f "$helm_dir/$helm_file" ]; then
+    cat "$helm_dir/$helm_file"
     return
   fi
 
