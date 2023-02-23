@@ -59,6 +59,11 @@ load 'test-helper'
     [ $status = 0 ]
 }
 
+@test "should success with leading forward slash in ref" {
+    _run_helm_git "git+https://github.com/jaroslaw-osmanski/helm-git-test@/test-chart/index.yaml?ref=feature/feature-test"
+    [ $status = 0 ]
+}
+
 @test "should success with empty git_path without slash" {
     _run_helm_git "git+https://github.com/hashicorp/vault-helm@index.yaml?ref=v0.5.0"
     [ $status = 0 ]
