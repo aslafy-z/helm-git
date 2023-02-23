@@ -280,16 +280,16 @@ main() {
   readonly git_ref
 
   git_sparse=$(echo "$_uri_query" | sed '/^.*sparse=\([^&#]*\).*$/!d;s//\1/')
-  readonly git_sparse
   [ -z "$git_sparse" ] && git_sparse=1
+  readonly git_sparse
 
   helm_depupdate=$(echo "$_uri_query" | sed '/^.*depupdate=\([^&#]*\).*$/!d;s//\1/')
-  readonly helm_depupdate
   [ -z "$helm_depupdate" ] && helm_depupdate=1
+  readonly helm_depupdate
 
   helm_package=$(echo "$_uri_query" | sed '/^.*package=\([^&#]*\).*$/!d;s//\1/')
-  readonly helm_package
   [ -z "$helm_package" ] && helm_package=1
+  readonly helm_package
 
   debug "repo: ${git_repo} ref: ${git_ref} path: ${helm_dir} file: ${helm_file} sparse: ${git_sparse} depupdate: ${helm_depupdate} package: ${helm_package}"
   readonly helm_repo_uri="git+${git_repo}@${helm_dir}?ref=${git_ref}&sparse=${git_sparse}&depupdate=${helm_depupdate}&package=${helm_package}"
