@@ -239,12 +239,17 @@ main() {
   string_starts "$_raw_uri" "$url_prefix" ||
     error "Invalid format, got '$_raw_uri'. $error_invalid_prefix"
 
-  # Thanks to https://stackoverflow.com/a/63993578
+  # Thanks goes to https://stackoverflow.com/a/63993578
   readonly URI_REGEX='^([^:/?#]+):(//((([^/?#]+)@)?([^/?#]+)?))?(/([^?#]*))(\?([^#]*))?(#(.*))?$'
-  readonly _uri_scheme=$(echo "$_raw_uri" | sed -Ene "s'$URI_REGEX'\1'p")
-  readonly _uri_authority=$(echo "$_raw_uri" | sed -Ene "s'$URI_REGEX'\3'p")
-  readonly _uri_path=$(echo "$_raw_uri" | sed -Ene "s'$URI_REGEX'\8'p")
-  readonly _uri_query=$(echo "$_raw_uri" | sed -Ene "s'$URI_REGEX'\9'p")
+
+  _uri_scheme=$(echo "$_raw_uri" | sed -Ene "s'$URI_REGEX'\1'p")
+  readonly _uri_scheme
+  _uri_authority=$(echo "$_raw_uri" | sed -Ene "s'$URI_REGEX'\3'p")
+  readonly _uri_scheme
+  _uri_path=$(echo "$_raw_uri" | sed -Ene "s'$URI_REGEX'\8'p")
+  readonly _uri_scheme
+  _uri_query=$(echo "$_raw_uri" | sed -Ene "s'$URI_REGEX'\9'p")
+  readonly _uri_scheme
 
   git_scheme=$(echo "$_uri_scheme" | sed -e 's/^git+//')
   readonly git_scheme="$git_scheme"
@@ -252,19 +257,19 @@ main() {
     error "$error_invalid_protocol"
 
   git_repo_path=$(echo "${_uri_path}" | cut -d'@' -f 1)
-  readonly git_repo_path="$git_repo_path"
+  readonly git_repo_path
 
   git_file_path=$(echo "${_uri_path}" | cut -d'@' -f 2)
-  readonly git_file_path="$git_file_path"
+  readonly git_file_path
 
   helm_dir=$(dirname "${git_file_path}" | sed -r '/^[\.|/]$/d')
-  readonly helm_dir="$helm_dir"
+  readonly helm_dir
 
   helm_file=$(basename "${git_file_path}")
-  readonly helm_file="$helm_file"
+  readonly helm_file
 
   git_repo="${git_scheme}://${_uri_authority}/${git_repo_path}"
-  readonly git_repo="$git_repo"
+  readonly git_repo
 
   git_ref=$(echo "$_uri_query" | sed '/^.*ref=\([^&#]*\).*$/!d;s//\1/')
   # TODO: Validate git_ref
@@ -272,19 +277,22 @@ main() {
     warning "git_ref is empty, defaulted to 'master'. Prefer to pin GIT ref in URI."
     git_ref="master"
   fi
-  readonly git_ref="$git_ref"
+  readonly git_ref
 
   git_sparse=$(echo "$_uri_query" | sed '/^.*sparse=\([^&#]*\).*$/!d;s//\1/')
+  readonly git_sparse
   [ -z "$git_sparse" ] && git_sparse=1
 
   helm_depupdate=$(echo "$_uri_query" | sed '/^.*depupdate=\([^&#]*\).*$/!d;s//\1/')
+  readonly helm_depupdate
   [ -z "$helm_depupdate" ] && helm_depupdate=1
 
   helm_package=$(echo "$_uri_query" | sed '/^.*package=\([^&#]*\).*$/!d;s//\1/')
+  readonly helm_package
   [ -z "$helm_package" ] && helm_package=1
 
-  debug "repo: $git_repo ref: $git_ref path: $helm_dir file: $helm_file sparse: $git_sparse depupdate: $helm_depupdate package: $helm_package"
-  readonly helm_repo_uri="git+$git_repo@$helm_dir?ref=$git_ref&sparse=$git_sparse&depupdate=$helm_depupdate&package=$helm_package"
+  debug "repo: ${git_repo} ref: ${git_ref} path: ${helm_dir} file: ${helm_file} sparse: ${git_sparse} depupdate: ${helm_depupdate} package: ${helm_package}"
+  readonly helm_repo_uri="git+${git_repo}@${helm_dir}?ref=${git_ref}&sparse=${git_sparse}&depupdate=${helm_depupdate}&package=${helm_package}"
   debug "helm_repo_uri: $helm_repo_uri"
 
   if ${CACHE_CHARTS}; then
