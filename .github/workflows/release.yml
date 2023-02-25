@@ -47,7 +47,7 @@ jobs:
           ln -fs /bin/busybox $path/grep
           ln -fs /bin/busybox $path/ls
           ln -fs /bin/busybox $path/mktemp
-          echo "${PWD}/.path" >> $GITHUB_PATH
+          echo "$path" >> $GITHUB_PATH
 
       - run: npm run test
       - run: npm run test:e2e
