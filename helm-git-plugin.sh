@@ -245,11 +245,11 @@ main() {
   _uri_scheme=$(echo "$_raw_uri" | sed -Ene "s'$URI_REGEX'\1'p")
   readonly _uri_scheme
   _uri_authority=$(echo "$_raw_uri" | sed -Ene "s'$URI_REGEX'\3'p")
-  readonly _uri_scheme
+  readonly _uri_authority
   _uri_path=$(echo "$_raw_uri" | sed -Ene "s'$URI_REGEX'\8'p")
-  readonly _uri_scheme
+  readonly _uri_path
   _uri_query=$(echo "$_raw_uri" | sed -Ene "s'$URI_REGEX'\9'p")
-  readonly _uri_scheme
+  readonly _uri_query
 
   git_scheme=$(echo "$_uri_scheme" | sed -e 's/^git+//')
   readonly git_scheme="$git_scheme"
