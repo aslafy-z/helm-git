@@ -89,6 +89,11 @@ As this plugin uses `git` CLI to clone repos. You can configure private access i
 - **using ssh**: Start a [ssh-agent daemon](https://help.github.com/articles/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent/#adding-your-ssh-key-to-the-ssh-agent)
 - **using https**: Use a [credentials helper](https://git-scm.com/docs/gitcredentials)
 
+### Note on SSH relative paths
+
+Helm parses the input URL before passing it down to the Helm downloader plugins (which is the type of this `helm-git` plugin). It does so by using the `net/url.Parse` Golang method, which does not support the full IETF specification. Specifically, it does not support `:` as the first path separator like in `git+ssh://git@github.com:aslafy-z/helm-git` as Git supports it. This means that you'll have to use an absolute path instead by using the `/` separator as in `git+ssh://git@github.com/aslafy-z/helm-git`. This should not be an issue in most case as major hosts supports the use of absolute paths instead of relative ones.
+If this becomes an issue for you, please open an issue and we may implement something to fill the gap until Golang or Helm does so.
+
 ## Troubleshooting
 
 You can enable debug output by setting `HELM_GIT_DEBUG` environment variable to `1`:
