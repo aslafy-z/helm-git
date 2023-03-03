@@ -41,13 +41,12 @@ jobs:
         run: |
           path="${PWD}/.busybox"
           mkdir -p $path
-          ln -fs /bin/busybox $path/bash
           ln -fs /bin/busybox $path/sh
           ln -fs /bin/busybox $path/sed
           ln -fs /bin/busybox $path/grep
           ln -fs /bin/busybox $path/ls
           ln -fs /bin/busybox $path/mktemp
-          echo "${PWD}/.path" >> $GITHUB_PATH
+          echo "$path" >> $GITHUB_PATH
 
       - run: npm run test
       - run: npm run test:e2e
