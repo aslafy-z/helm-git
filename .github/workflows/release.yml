@@ -41,7 +41,6 @@ jobs:
         run: |
           path="${PWD}/.busybox"
           mkdir -p $path
-          install -m 755 <(echo -e '#!/bin/sh\nexec busybox sh $@') $path/bash
           ln -fs /bin/busybox $path/sh
           ln -fs /bin/busybox $path/sed
           ln -fs /bin/busybox $path/grep
