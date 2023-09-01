@@ -33,7 +33,7 @@ CACHE_CHARTS=$([ -n "${HELM_GIT_CHART_CACHE:-}" ] && echo "true" || echo "false"
 string_starts() { [ "$(echo "$1" | cut -c 1-${#2})" = "$2" ]; }
 string_ends() { [ "$(echo "$1" | cut -c $((${#1} - ${#2} + 1))-${#1})" = "$2" ]; }
 string_contains() { echo "$1" | grep -q "$2"; }
-path_join() { echo "${1:+$1/}$2" | sed 's#//#/#g'; }
+path_join() { echo "${1:+$1/}${2:-""}" | sed 's#//#/#g'; }
 
 ## Logging
 trace() {
@@ -274,13 +274,19 @@ main() {
   string_contains "$allowed_protocols" "$git_scheme" ||
     error "$error_invalid_protocol"
 
-  git_repo_path=$(echo "${_uri_path}" | cut -d'@' -f 1)
-  readonly git_repo_path
+  num=$(echo "$_uri_path" | grep -o "@" | wc -l)
+  URI_PATH_REGEX='^(.+/.+)/(.+/.+)$'
 
-  git_file_path=$(echo "${_uri_path}" | cut -d'@' -f 2)
+  if [ "$num" -eq 0 ]; then
+    git_repo_path=$(echo "${_uri_path}" | sed -Ene "s'$URI_PATH_REGEX'\1'p")
+    git_file_path=$(echo "${_uri_path}" | sed -Ene "s'$URI_PATH_REGEX'\2'p")
+  else
+    git_repo_path=$(echo "${_uri_path}" | cut -d'@' -f 1)
+    git_file_path=$(echo "${_uri_path}" | cut -d'@' -f 2)
+  fi
+  readonly git_repo_path
   readonly git_file_path
   trace "git_repo_path: $git_repo_path"
-
   trace "git_file_path: $git_file_path"
 
   helm_dir=$(dirname "${git_file_path}" | sed -r '/^[\.|/]$/d')
@@ -320,7 +326,12 @@ main() {
   trace "helm_package: $helm_package"
 
   debug "repo: ${git_repo} ref: ${git_ref} path: ${helm_dir} file: ${helm_file} sparse: ${git_sparse} depupdate: ${helm_depupdate} package: ${helm_package}"
-  readonly helm_repo_uri="git+${git_repo}@${helm_dir}?ref=${git_ref}&sparse=${git_sparse}&depupdate=${helm_depupdate}&package=${helm_package}"
+  if [ -z "$helm_dir" ]; then
+    helm_dir_helper=""
+  else
+    helm_dir_helper="@$helm_dir"
+  fi
+  readonly helm_repo_uri="git+${git_repo}${helm_dir_helper}?ref=${git_ref}&sparse=${git_sparse}&depupdate=${helm_depupdate}&package=${helm_package}"
   trace "helm_repo_uri: $helm_repo_uri"
 
   if ${CACHE_CHARTS}; then
@@ -358,8 +369,14 @@ main() {
   git_checkout "$git_sparse" "$git_root_path" "$git_repo" "$git_ref" "$helm_dir" ||
     error "Error while git_sparse_checkout"
 
-  if [ -f "$helm_dir/$helm_file" ]; then
-    cat "$helm_dir/$helm_file"
+  if [ -z "$helm_dir" ]; then
+    helm_dir_helper="$helm_file"
+  else
+    helm_dir_helper="$helm_dir/$helm_file"
+  fi
+  trace "helm_dir_helper: $helm_dir_helper"
+  if [ -f "$helm_dir_helper" ]; then
+    cat "$helm_dir_helper"
     return
   fi
 
