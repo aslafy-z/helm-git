@@ -16,6 +16,16 @@ if [ "${HELM_GIT_DEBUG:-}" = "1" ]; then
   debug=1
 fi
 
+trace=0
+git_output="/dev/null"
+git_quiet="--quiet"
+if [ "${HELM_GIT_TRACE:-}" = "1" ]; then
+  trace=1
+  debug=1
+  git_output="/dev/stderr"
+  git_quiet=""
+fi
+
 export TMPDIR="${TMPDIR:-/tmp}"
 
 # Cache repos or charts depending on the cache path existing in the environment variables
@@ -27,9 +37,13 @@ CACHE_CHARTS=$([ -n "${HELM_GIT_CHART_CACHE:-}" ] && echo "true" || echo "false"
 string_starts() { [ "$(echo "$1" | cut -c 1-${#2})" = "$2" ]; }
 string_ends() { [ "$(echo "$1" | cut -c $((${#1} - ${#2} + 1))-${#1})" = "$2" ]; }
 string_contains() { echo "$1" | grep -q "$2"; }
-path_join() { echo "${1:+$1/}$2" | sed 's#//#/#g'; }
+path_join() { echo "${1:+$1/}${2:-""}" | sed 's#//#/#g'; }
 
 ## Logging
+trace() {
+  [ $trace = 1 ] && echo "Trace[$$] in plugin '$bin_name': $*" >&2
+  return 0
+}
 
 debug() {
   [ $debug = 1 ] && echo "Debug[$$] in plugin '$bin_name': $*" >&2
@@ -51,45 +65,52 @@ warning() {
 git_try() {
   _git_repo=$1
 
-  GIT_TERMINAL_PROMPT=0 git ls-remote "$_git_repo" --refs >&2 || return 1
+  GIT_TERMINAL_PROMPT=0 git ls-remote "$_git_repo" --refs "${git_output}" || return 1
 }
 
 #git_cache_intercept(git_repo, git_ref)
 git_cache_intercept() {
-    _git_repo="${1?Missing git_repo as first parameter}"
-    _git_ref="${2?Missing git_ref as second parameter}"
-    debug "Trying to intercept for ${_git_repo}#${_git_ref}"
-    repo_tokens=$(echo "${_git_repo}" | sed -E -e 's/[^/]+\/\/([^@]*@)?([^/]+)\/(.+)$/\2 \3/' -e 's/\.git$//g' )
-    repo_host=$(echo "${repo_tokens}" | cut -d " " -f1)
-    repo_repo=$(echo "${repo_tokens}" | cut -d " " -f2)
-    if [ ! -d "${HELM_GIT_REPO_CACHE}" ]; then
-        debug "HELM_GIT_REPO_CACHE:${HELM_GIT_REPO_CACHE} is not a directory, cannot cache"
-        echo "${_git_repo}"
-        return
-    fi
+  _git_repo="${1?Missing git_repo as first parameter}"
+  _git_ref="${2?Missing git_ref as second parameter}"
+  debug "Trying to intercept for ${_git_repo}#${_git_ref}"
+  repo_tokens=$(echo "${_git_repo}" | sed -E -e 's/[^/]+\/\/([^@]*@)?([^/]+)\/(.+)$/\2 \3/' -e 's/\.git$//g')
+  repo_host=$(echo "${repo_tokens}" | cut -d " " -f1)
+  repo_repo=$(echo "${repo_tokens}" | cut -d " " -f2)
+  if [ ! -d "${HELM_GIT_REPO_CACHE}" ]; then
+    debug "HELM_GIT_REPO_CACHE:${HELM_GIT_REPO_CACHE} is not a directory, cannot cache"
+    echo "${_git_repo}"
+    return
+  fi
 
-    repo_path="${HELM_GIT_REPO_CACHE}/${repo_host}/${repo_repo}"
-    debug "Calculated cache path for repo ${_git_repo} is ${repo_path}"
+  repo_path="${HELM_GIT_REPO_CACHE}/${repo_host}/${repo_repo}"
+  debug "Calculated cache path for repo ${_git_repo} is ${repo_path}"
 
-    if [ ! -d "${repo_path}" ]; then
-        debug "First time I see ${_git_repo}, fetching into ${repo_path}"
-        if ! git clone --bare --branch "${_git_ref}" "${_git_repo}" "${repo_path}" 2> /dev/null; then
-            debug "Could not clone ${_git_repo}"
-        fi
-    else
-        debug "${_git_repo} exists in cache"
+  if [ ! -d "${repo_path}" ]; then
+    debug "First time I see ${_git_repo}, fetching into ${repo_path}"
+    if ! git clone --bare --branch "${_git_ref}" "${_git_repo}" "${repo_path}" 2>"${git_output}"; then
+      debug "Could not clone ${_git_repo}"
     fi
-    debug "Making sure we have the requested ref #${_git_ref}"
-    if ! GIT_REPO="${repo_path}" git tag -l "${_git_ref}" >/dev/null 2>&1; then
-        debug "Did not find ${_git_ref} in our cache for ${_git_repo}, fetching...."
-        git fetch origin --quiet "${_git_ref}"
-    else
-        debug "Ref ${_git_ref} was already cached for ${_git_repo}"
+  else
+    debug "${_git_repo} exists in cache"
+  fi
+  debug "Making sure we have the requested ref #${_git_ref}"
+  if ! GIT_REPO="${repo_path}" git tag -l "${_git_ref}" >"${git_output}" 2>&1; then
+    debug "Did not find ${_git_ref} in our cache for ${_git_repo}, fetching...."
+    git fetch origin "${_git_ref}" "${git_quiet}"
+  else
+    debug "Ref ${_git_ref} was already cached for ${_git_repo}, ensuring latest...."
+    if [ "$(echo "${helm_file}" | sed 's/^.*\.//')" != "tgz" ]; then
+      debug "Ensuring latest ${_git_ref}...."
+      (
+        cd "${repo_path}"
+        git fetch origin "${_git_ref}:${_git_ref}" --force --prune "${git_quiet}"
+      )
     fi
+  fi
 
-    new_git_repo="file://${repo_path}"
-    debug "Returning cached repo at ${new_git_repo}"
-    echo "${new_git_repo}"
+  new_git_repo="file://${repo_path}"
+  debug "Returning cached repo at ${new_git_repo}"
+  echo "${new_git_repo}"
 }
 
 # git_checkout(sparse, target_path, git_repo, git_ref, git_path)
@@ -101,7 +122,7 @@ git_checkout() {
   _git_path=$5
 
   if $CACHE_REPOS; then
-      _git_repo=$(git_cache_intercept "${_git_repo}" "${_git_ref}")
+    _git_repo=$(git_cache_intercept "${_git_repo}" "${_git_ref}")
   fi
 
   cd "$_target_path" >&2
@@ -111,12 +132,12 @@ git_checkout() {
   if [ "$_sparse" = "1" ]; then
     git config core.sparseCheckout true
     [ -n "$_git_path" ] && echo "$_git_path/*" >.git/info/sparse-checkout
-    git pull --quiet --depth 1 origin "$_git_ref" >&2 || \
+    git pull --quiet --depth 1 origin "$_git_ref" >&2 ||
       error "Unable to sparse-checkout. Check your Git ref ($_git_ref) and path ($_git_path)."
   else
-    git fetch --quiet --tags origin >&2 || \
+    git fetch --quiet --tags origin >&2 ||
       error "Unable to fetch remote. Check your Git url."
-    git checkout --quiet "$git_ref" >&2 || \
+    git checkout --quiet "$git_ref" >&2 ||
       error "Unable to checkout ref. Check your Git ref ($git_ref)."
   fi
   # shellcheck disable=SC2010,SC2012
@@ -173,7 +194,7 @@ helm_dependency_update() {
   helm_args=${helm_args:-}
 
   # Prevent infinity loop when calling helm-git plugin
-  if ${HELM_GIT_DEPENDENCY_CIRCUITBREAKER:-false};  then
+  if ${HELM_GIT_DEPENDENCY_CIRCUITBREAKER:-false}; then
     # shellcheck disable=SC2086
     "$HELM_BIN" dependency update $helm_args --skip-refresh "$_target_path" >/dev/null
     ret=$?
@@ -216,21 +237,20 @@ helm_inspect_name() {
 
 # main(raw_uri)
 main() {
+  trace "args: $*"
   helm_args="" # "$1 $2 $3"
   _raw_uri=$4  # eg: git+https://git.com/user/repo@path/to/charts/index.yaml?ref=master
 
-
   # If defined, use $HELM_GIT_HELM_BIN as $HELM_BIN.
-  if [ -n "${HELM_GIT_HELM_BIN:-}" ]
-  then
+  if [ -n "${HELM_GIT_HELM_BIN:-}" ]; then
     export HELM_BIN="${HELM_GIT_HELM_BIN}"
   # If not, use $HELM_BIN after sanitizing it or default to 'helm'.
   elif
     [ -z "$HELM_BIN" ] ||
-    # terraform-provider-helm: https://github.com/aslafy-z/helm-git/issues/101
-    echo "$HELM_BIN" | grep -q "terraform-provider-helm" ||
-    # helm-diff plugin: https://github.com/aslafy-z/helm-git/issues/107
-    echo "$HELM_BIN" | grep -q "diff"
+      # terraform-provider-helm: https://github.com/aslafy-z/helm-git/issues/101
+      echo "$HELM_BIN" | grep -q "terraform-provider-helm" ||
+      # helm-diff plugin: https://github.com/aslafy-z/helm-git/issues/107
+      echo "$HELM_BIN" | grep -q "diff"
   then
     export HELM_BIN="helm"
   fi
@@ -244,32 +264,52 @@ main() {
 
   _uri_scheme=$(echo "$_raw_uri" | sed -Ene "s'$URI_REGEX'\1'p")
   readonly _uri_scheme
+  trace "_uri_scheme: $_uri_scheme"
+
   _uri_authority=$(echo "$_raw_uri" | sed -Ene "s'$URI_REGEX'\3'p")
   readonly _uri_authority
+  trace "_uri_authority: $_uri_authority"
+
   _uri_path=$(echo "$_raw_uri" | sed -Ene "s'$URI_REGEX'\8'p")
   readonly _uri_path
+  trace "_uri_path: $_uri_path"
+
   _uri_query=$(echo "$_raw_uri" | sed -Ene "s'$URI_REGEX'\9'p")
   readonly _uri_query
+  trace "_uri_query: $_uri_query"
 
   git_scheme=$(echo "$_uri_scheme" | sed -e 's/^git+//')
   readonly git_scheme="$git_scheme"
+  trace "git_scheme: $git_scheme"
   string_contains "$allowed_protocols" "$git_scheme" ||
     error "$error_invalid_protocol"
 
-  git_repo_path=$(echo "${_uri_path}" | cut -d'@' -f 1)
-  readonly git_repo_path
+  num=$(echo "$_uri_path" | grep -o "@" | wc -l)
+  URI_PATH_REGEX='^(.+/.+)/(.+/.+)$'
 
-  git_file_path=$(echo "${_uri_path}" | cut -d'@' -f 2)
+  if [ "$num" -eq 0 ]; then
+    git_repo_path=$(echo "${_uri_path}" | sed -Ene "s'$URI_PATH_REGEX'\1'p")
+    git_file_path=$(echo "${_uri_path}" | sed -Ene "s'$URI_PATH_REGEX'\2'p")
+  else
+    git_repo_path=$(echo "${_uri_path}" | cut -d'@' -f 1)
+    git_file_path=$(echo "${_uri_path}" | cut -d'@' -f 2)
+  fi
+  readonly git_repo_path
   readonly git_file_path
+  trace "git_repo_path: $git_repo_path"
+  trace "git_file_path: $git_file_path"
 
   helm_dir=$(dirname "${git_file_path}" | sed -r '/^[\.|/]$/d')
   readonly helm_dir
+  trace "helm_dir: $helm_dir"
 
   helm_file=$(basename "${git_file_path}")
   readonly helm_file
+  trace "helm_file: $helm_file"
 
   git_repo="${git_scheme}://${_uri_authority}/${git_repo_path}"
   readonly git_repo
+  trace "git_repo: $git_repo"
 
   git_ref=$(echo "$_uri_query" | sed '/^.*ref=\([^&#]*\).*$/!d;s//\1/')
   # TODO: Validate git_ref
@@ -278,22 +318,31 @@ main() {
     git_ref="master"
   fi
   readonly git_ref
+  trace "git_ref: $git_ref"
 
   git_sparse=$(echo "$_uri_query" | sed '/^.*sparse=\([^&#]*\).*$/!d;s//\1/')
   [ -z "$git_sparse" ] && git_sparse=1
   readonly git_sparse
+  trace "git_sparse: $git_sparse"
 
   helm_depupdate=$(echo "$_uri_query" | sed '/^.*depupdate=\([^&#]*\).*$/!d;s//\1/')
   [ -z "$helm_depupdate" ] && helm_depupdate=1
   readonly helm_depupdate
+  trace "helm_depupdate: $helm_depupdate"
 
   helm_package=$(echo "$_uri_query" | sed '/^.*package=\([^&#]*\).*$/!d;s//\1/')
   [ -z "$helm_package" ] && helm_package=1
   readonly helm_package
+  trace "helm_package: $helm_package"
 
   debug "repo: ${git_repo} ref: ${git_ref} path: ${helm_dir} file: ${helm_file} sparse: ${git_sparse} depupdate: ${helm_depupdate} package: ${helm_package}"
-  readonly helm_repo_uri="git+${git_repo}@${helm_dir}?ref=${git_ref}&sparse=${git_sparse}&depupdate=${helm_depupdate}&package=${helm_package}"
-  debug "helm_repo_uri: $helm_repo_uri"
+  if [ -z "$helm_dir" ]; then
+    helm_dir_helper=""
+  else
+    helm_dir_helper="@$helm_dir"
+  fi
+  readonly helm_repo_uri="git+${git_repo}${helm_dir_helper}?ref=${git_ref}&sparse=${git_sparse}&depupdate=${helm_depupdate}&package=${helm_package}"
+  trace "helm_repo_uri: $helm_repo_uri"
 
   if ${CACHE_CHARTS}; then
     _request_hash=$(echo "${_raw_uri}" | md5sum | cut -d " " -f1)
@@ -302,32 +351,42 @@ main() {
 
     _cached_file="${_cache_folder}/${helm_file}"
     if [ -f "${_cached_file}" ]; then
-        debug "Returning cached helm request: ${_cached_file}"
-        cat "${_cached_file}"
-        return 0
+      debug "Returning cached helm request: ${_cached_file}"
+      cat "${_cached_file}"
+      return 0
     else
-        debug "Helm request not found in cache ${_cached_file}"
-        mkdir -p "${_cache_folder}"
+      debug "Helm request not found in cache ${_cached_file}"
+      mkdir -p "${_cache_folder}"
     fi
   fi
 
   # Setup cleanup trap
   # shellcheck disable=SC2317
   cleanup() {
-    rm -rf "$git_root_path"  "${helm_home_target_path:-}"
+    rm -rf "$git_root_path" "${helm_home_target_path:-}"
     ${CACHE_CHARTS} || rm -rf "${helm_target_path:-}"
   }
   trap cleanup EXIT
 
   git_root_path="$(mktemp -d "$TMPDIR/helm-git.XXXXXX")"
   readonly git_root_path="$git_root_path"
+  trace "git_root_path: $git_root_path"
+
   git_sub_path=$(path_join "$git_root_path" "$helm_dir")
   readonly git_sub_path="$git_sub_path"
+  trace "git_sub_path: $git_sub_path"
+
   git_checkout "$git_sparse" "$git_root_path" "$git_repo" "$git_ref" "$helm_dir" ||
     error "Error while git_sparse_checkout"
 
-  if [ -f "$helm_dir/$helm_file" ]; then
-    cat "$helm_dir/$helm_file"
+  if [ -z "$helm_dir" ]; then
+    helm_dir_helper="$helm_file"
+  else
+    helm_dir_helper="$helm_dir/$helm_file"
+  fi
+  trace "helm_dir_helper: $helm_dir_helper"
+  if [ -f "$helm_dir_helper" ]; then
+    cat "$helm_dir_helper"
     return
   fi
 
@@ -338,8 +397,11 @@ main() {
   fi
 
   readonly helm_target_path="$helm_target_path"
+  trace "helm_target_path: $helm_target_path"
+
   helm_target_file="$(path_join "$helm_target_path" "$helm_file")"
   readonly helm_target_file="$helm_target_file"
+  trace "helm_target_file: $helm_target_file"
 
   # Set helm home
   if helm_v2; then
@@ -369,8 +431,8 @@ main() {
           error "Error while helm_dependency_update"
       fi
       if [ "$helm_package" = "1" ]; then
-      helm_package "$helm_target_path" "$chart_path" "$chart_name" ||
-        error "Error while helm_package"
+        helm_package "$helm_target_path" "$chart_path" "$chart_name" ||
+          error "Error while helm_package"
       fi
     done
   }
