@@ -16,6 +16,12 @@ if [ "${HELM_GIT_DEBUG:-}" = "1" ]; then
   debug=1
 fi
 
+trace=0
+if [ "${HELM_GIT_TRACE:-}" = "1" ]; then
+  trace=1
+  debug=1
+fi
+
 export TMPDIR="${TMPDIR:-/tmp}"
 
 # Cache repos or charts depending on the cache path existing in the environment variables
@@ -30,6 +36,10 @@ string_contains() { echo "$1" | grep -q "$2"; }
 path_join() { echo "${1:+$1/}$2" | sed 's#//#/#g'; }
 
 ## Logging
+trace() {
+  [ $trace = 1 ] && echo "Trace[$$] in plugin '$bin_name': $*" >&2
+  return 0
+}
 
 debug() {
   [ $debug = 1 ] && echo "Debug[$$] in plugin '$bin_name': $*" >&2
@@ -244,15 +254,23 @@ main() {
 
   _uri_scheme=$(echo "$_raw_uri" | sed -Ene "s'$URI_REGEX'\1'p")
   readonly _uri_scheme
+  trace "_uri_scheme: $_uri_scheme"
+
   _uri_authority=$(echo "$_raw_uri" | sed -Ene "s'$URI_REGEX'\3'p")
   readonly _uri_authority
+  trace "_uri_authority: $_uri_authority"
+
   _uri_path=$(echo "$_raw_uri" | sed -Ene "s'$URI_REGEX'\8'p")
   readonly _uri_path
+  trace "_uri_path: $_uri_path"
+
   _uri_query=$(echo "$_raw_uri" | sed -Ene "s'$URI_REGEX'\9'p")
   readonly _uri_query
+  trace "_uri_query: $_uri_query"
 
   git_scheme=$(echo "$_uri_scheme" | sed -e 's/^git+//')
   readonly git_scheme="$git_scheme"
+  trace "git_scheme: $git_scheme"
   string_contains "$allowed_protocols" "$git_scheme" ||
     error "$error_invalid_protocol"
 
@@ -261,15 +279,21 @@ main() {
 
   git_file_path=$(echo "${_uri_path}" | cut -d'@' -f 2)
   readonly git_file_path
+  trace "git_repo_path: $git_repo_path"
+
+  trace "git_file_path: $git_file_path"
 
   helm_dir=$(dirname "${git_file_path}" | sed -r '/^[\.|/]$/d')
   readonly helm_dir
+  trace "helm_dir: $helm_dir"
 
   helm_file=$(basename "${git_file_path}")
   readonly helm_file
+  trace "helm_file: $helm_file"
 
   git_repo="${git_scheme}://${_uri_authority}/${git_repo_path}"
   readonly git_repo
+  trace "git_repo: $git_repo"
 
   git_ref=$(echo "$_uri_query" | sed '/^.*ref=\([^&#]*\).*$/!d;s//\1/')
   # TODO: Validate git_ref
@@ -278,22 +302,26 @@ main() {
     git_ref="master"
   fi
   readonly git_ref
+  trace "git_ref: $git_ref"
 
   git_sparse=$(echo "$_uri_query" | sed '/^.*sparse=\([^&#]*\).*$/!d;s//\1/')
   [ -z "$git_sparse" ] && git_sparse=1
   readonly git_sparse
+  trace "git_sparse: $git_sparse"
 
   helm_depupdate=$(echo "$_uri_query" | sed '/^.*depupdate=\([^&#]*\).*$/!d;s//\1/')
   [ -z "$helm_depupdate" ] && helm_depupdate=1
   readonly helm_depupdate
+  trace "helm_depupdate: $helm_depupdate"
 
   helm_package=$(echo "$_uri_query" | sed '/^.*package=\([^&#]*\).*$/!d;s//\1/')
   [ -z "$helm_package" ] && helm_package=1
   readonly helm_package
+  trace "helm_package: $helm_package"
 
   debug "repo: ${git_repo} ref: ${git_ref} path: ${helm_dir} file: ${helm_file} sparse: ${git_sparse} depupdate: ${helm_depupdate} package: ${helm_package}"
   readonly helm_repo_uri="git+${git_repo}@${helm_dir}?ref=${git_ref}&sparse=${git_sparse}&depupdate=${helm_depupdate}&package=${helm_package}"
-  debug "helm_repo_uri: $helm_repo_uri"
+  trace "helm_repo_uri: $helm_repo_uri"
 
   if ${CACHE_CHARTS}; then
     _request_hash=$(echo "${_raw_uri}" | md5sum | cut -d " " -f1)
@@ -321,8 +349,12 @@ main() {
 
   git_root_path="$(mktemp -d "$TMPDIR/helm-git.XXXXXX")"
   readonly git_root_path="$git_root_path"
+  trace "git_root_path: $git_root_path"
+
   git_sub_path=$(path_join "$git_root_path" "$helm_dir")
   readonly git_sub_path="$git_sub_path"
+  trace "git_sub_path: $git_sub_path"
+
   git_checkout "$git_sparse" "$git_root_path" "$git_repo" "$git_ref" "$helm_dir" ||
     error "Error while git_sparse_checkout"
 
@@ -338,8 +370,11 @@ main() {
   fi
 
   readonly helm_target_path="$helm_target_path"
+  trace "helm_target_path: $helm_target_path"
+
   helm_target_file="$(path_join "$helm_target_path" "$helm_file")"
   readonly helm_target_file="$helm_target_file"
+  trace "helm_target_file: $helm_target_file"
 
   # Set helm home
   if helm_v2; then
