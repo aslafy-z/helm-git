@@ -17,9 +17,13 @@ if [ "${HELM_GIT_DEBUG:-}" = "1" ]; then
 fi
 
 trace=0
+git_output="/dev/null"
+git_quiet="--quiet"
 if [ "${HELM_GIT_TRACE:-}" = "1" ]; then
   trace=1
   debug=1
+  git_output="/dev/stderr"
+  git_quiet=""
 fi
 
 export TMPDIR="${TMPDIR:-/tmp}"
@@ -81,20 +85,26 @@ git_cache_intercept() {
     repo_path="${HELM_GIT_REPO_CACHE}/${repo_host}/${repo_repo}"
     debug "Calculated cache path for repo ${_git_repo} is ${repo_path}"
 
-    if [ ! -d "${repo_path}" ]; then
-        debug "First time I see ${_git_repo}, fetching into ${repo_path}"
-        if ! git clone --bare --branch "${_git_ref}" "${_git_repo}" "${repo_path}" 2> /dev/null; then
-            debug "Could not clone ${_git_repo}"
-        fi
-    else
-        debug "${_git_repo} exists in cache"
+  if [ ! -d "${repo_path}" ]; then
+    debug "First time I see ${_git_repo}, fetching into ${repo_path}"
+    if ! git clone --bare --branch "${_git_ref}" "${_git_repo}" "${repo_path}" 2>"${git_output}"; then
+      debug "Could not clone ${_git_repo}"
     fi
-    debug "Making sure we have the requested ref #${_git_ref}"
-    if ! GIT_REPO="${repo_path}" git tag -l "${_git_ref}" >/dev/null 2>&1; then
-        debug "Did not find ${_git_ref} in our cache for ${_git_repo}, fetching...."
-        git fetch origin --quiet "${_git_ref}"
-    else
-        debug "Ref ${_git_ref} was already cached for ${_git_repo}"
+  else
+    debug "${_git_repo} exists in cache"
+  fi
+  debug "Making sure we have the requested ref #${_git_ref}"
+  if ! GIT_REPO="${repo_path}" git tag -l "${_git_ref}" >"${git_output}" 2>&1; then
+    debug "Did not find ${_git_ref} in our cache for ${_git_repo}, fetching...."
+    git fetch origin "${_git_ref}" "${git_quiet}"
+  else
+    debug "Ref ${_git_ref} was already cached for ${_git_repo}, ensuring latest...."
+    if [ "$(echo "${helm_file}" | sed 's/^.*\.//')" != "tgz" ]; then
+      debug "Ensuring latest ${_git_ref}...."
+      (
+        cd "${repo_path}"
+        git fetch origin "${_git_ref}:${_git_ref}" --force --prune "${git_quiet}"
+      )
     fi
 
     new_git_repo="file://${repo_path}"
