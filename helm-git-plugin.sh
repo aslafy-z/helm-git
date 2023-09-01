@@ -65,25 +65,25 @@ warning() {
 git_try() {
   _git_repo=$1
 
-  GIT_TERMINAL_PROMPT=0 git ls-remote "$_git_repo" --refs >&2 || return 1
+  GIT_TERMINAL_PROMPT=0 git ls-remote "$_git_repo" --refs "${git_output}" || return 1
 }
 
 #git_cache_intercept(git_repo, git_ref)
 git_cache_intercept() {
-    _git_repo="${1?Missing git_repo as first parameter}"
-    _git_ref="${2?Missing git_ref as second parameter}"
-    debug "Trying to intercept for ${_git_repo}#${_git_ref}"
-    repo_tokens=$(echo "${_git_repo}" | sed -E -e 's/[^/]+\/\/([^@]*@)?([^/]+)\/(.+)$/\2 \3/' -e 's/\.git$//g' )
-    repo_host=$(echo "${repo_tokens}" | cut -d " " -f1)
-    repo_repo=$(echo "${repo_tokens}" | cut -d " " -f2)
-    if [ ! -d "${HELM_GIT_REPO_CACHE}" ]; then
-        debug "HELM_GIT_REPO_CACHE:${HELM_GIT_REPO_CACHE} is not a directory, cannot cache"
-        echo "${_git_repo}"
-        return
-    fi
+  _git_repo="${1?Missing git_repo as first parameter}"
+  _git_ref="${2?Missing git_ref as second parameter}"
+  debug "Trying to intercept for ${_git_repo}#${_git_ref}"
+  repo_tokens=$(echo "${_git_repo}" | sed -E -e 's/[^/]+\/\/([^@]*@)?([^/]+)\/(.+)$/\2 \3/' -e 's/\.git$//g')
+  repo_host=$(echo "${repo_tokens}" | cut -d " " -f1)
+  repo_repo=$(echo "${repo_tokens}" | cut -d " " -f2)
+  if [ ! -d "${HELM_GIT_REPO_CACHE}" ]; then
+    debug "HELM_GIT_REPO_CACHE:${HELM_GIT_REPO_CACHE} is not a directory, cannot cache"
+    echo "${_git_repo}"
+    return
+  fi
 
-    repo_path="${HELM_GIT_REPO_CACHE}/${repo_host}/${repo_repo}"
-    debug "Calculated cache path for repo ${_git_repo} is ${repo_path}"
+  repo_path="${HELM_GIT_REPO_CACHE}/${repo_host}/${repo_repo}"
+  debug "Calculated cache path for repo ${_git_repo} is ${repo_path}"
 
   if [ ! -d "${repo_path}" ]; then
     debug "First time I see ${_git_repo}, fetching into ${repo_path}"
@@ -106,10 +106,11 @@ git_cache_intercept() {
         git fetch origin "${_git_ref}:${_git_ref}" --force --prune "${git_quiet}"
       )
     fi
+  fi
 
-    new_git_repo="file://${repo_path}"
-    debug "Returning cached repo at ${new_git_repo}"
-    echo "${new_git_repo}"
+  new_git_repo="file://${repo_path}"
+  debug "Returning cached repo at ${new_git_repo}"
+  echo "${new_git_repo}"
 }
 
 # git_checkout(sparse, target_path, git_repo, git_ref, git_path)
@@ -121,7 +122,7 @@ git_checkout() {
   _git_path=$5
 
   if $CACHE_REPOS; then
-      _git_repo=$(git_cache_intercept "${_git_repo}" "${_git_ref}")
+    _git_repo=$(git_cache_intercept "${_git_repo}" "${_git_ref}")
   fi
 
   cd "$_target_path" >&2
@@ -131,12 +132,12 @@ git_checkout() {
   if [ "$_sparse" = "1" ]; then
     git config core.sparseCheckout true
     [ -n "$_git_path" ] && echo "$_git_path/*" >.git/info/sparse-checkout
-    git pull --quiet --depth 1 origin "$_git_ref" >&2 || \
+    git pull --quiet --depth 1 origin "$_git_ref" >&2 ||
       error "Unable to sparse-checkout. Check your Git ref ($_git_ref) and path ($_git_path)."
   else
-    git fetch --quiet --tags origin >&2 || \
+    git fetch --quiet --tags origin >&2 ||
       error "Unable to fetch remote. Check your Git url."
-    git checkout --quiet "$git_ref" >&2 || \
+    git checkout --quiet "$git_ref" >&2 ||
       error "Unable to checkout ref. Check your Git ref ($git_ref)."
   fi
   # shellcheck disable=SC2010,SC2012
@@ -193,7 +194,7 @@ helm_dependency_update() {
   helm_args=${helm_args:-}
 
   # Prevent infinity loop when calling helm-git plugin
-  if ${HELM_GIT_DEPENDENCY_CIRCUITBREAKER:-false};  then
+  if ${HELM_GIT_DEPENDENCY_CIRCUITBREAKER:-false}; then
     # shellcheck disable=SC2086
     "$HELM_BIN" dependency update $helm_args --skip-refresh "$_target_path" >/dev/null
     ret=$?
@@ -236,21 +237,20 @@ helm_inspect_name() {
 
 # main(raw_uri)
 main() {
+  trace "args: $*"
   helm_args="" # "$1 $2 $3"
   _raw_uri=$4  # eg: git+https://git.com/user/repo@path/to/charts/index.yaml?ref=master
 
-
   # If defined, use $HELM_GIT_HELM_BIN as $HELM_BIN.
-  if [ -n "${HELM_GIT_HELM_BIN:-}" ]
-  then
+  if [ -n "${HELM_GIT_HELM_BIN:-}" ]; then
     export HELM_BIN="${HELM_GIT_HELM_BIN}"
   # If not, use $HELM_BIN after sanitizing it or default to 'helm'.
   elif
     [ -z "$HELM_BIN" ] ||
-    # terraform-provider-helm: https://github.com/aslafy-z/helm-git/issues/101
-    echo "$HELM_BIN" | grep -q "terraform-provider-helm" ||
-    # helm-diff plugin: https://github.com/aslafy-z/helm-git/issues/107
-    echo "$HELM_BIN" | grep -q "diff"
+      # terraform-provider-helm: https://github.com/aslafy-z/helm-git/issues/101
+      echo "$HELM_BIN" | grep -q "terraform-provider-helm" ||
+      # helm-diff plugin: https://github.com/aslafy-z/helm-git/issues/107
+      echo "$HELM_BIN" | grep -q "diff"
   then
     export HELM_BIN="helm"
   fi
@@ -351,19 +351,19 @@ main() {
 
     _cached_file="${_cache_folder}/${helm_file}"
     if [ -f "${_cached_file}" ]; then
-        debug "Returning cached helm request: ${_cached_file}"
-        cat "${_cached_file}"
-        return 0
+      debug "Returning cached helm request: ${_cached_file}"
+      cat "${_cached_file}"
+      return 0
     else
-        debug "Helm request not found in cache ${_cached_file}"
-        mkdir -p "${_cache_folder}"
+      debug "Helm request not found in cache ${_cached_file}"
+      mkdir -p "${_cache_folder}"
     fi
   fi
 
   # Setup cleanup trap
   # shellcheck disable=SC2317
   cleanup() {
-    rm -rf "$git_root_path"  "${helm_home_target_path:-}"
+    rm -rf "$git_root_path" "${helm_home_target_path:-}"
     ${CACHE_CHARTS} || rm -rf "${helm_target_path:-}"
   }
   trap cleanup EXIT
@@ -431,8 +431,8 @@ main() {
           error "Error while helm_dependency_update"
       fi
       if [ "$helm_package" = "1" ]; then
-      helm_package "$helm_target_path" "$chart_path" "$chart_name" ||
-        error "Error while helm_package"
+        helm_package "$helm_target_path" "$chart_path" "$chart_name" ||
+          error "Error while helm_package"
       fi
     done
   }
