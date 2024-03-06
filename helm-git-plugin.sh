@@ -99,7 +99,7 @@ git_cache_intercept() {
     else
         debug "Ref ${_git_ref} was already cached for ${_git_repo}"
     fi
-    debug Tags in the repo: "$(GIT_DIR="${repo_path}" git tag -l)"
+    debug "Tags in the repo: $(GIT_DIR="${repo_path}" git tag -l)"
 
     new_git_repo="file://${repo_path}"
     debug "Returning cached repo at ${new_git_repo}"
@@ -115,19 +115,19 @@ git_checkout() {
   _git_path=$5
 
   if $CACHE_REPOS; then
-      _intercepted_repo=$(git_cache_intercept "${_git_repo}" "${_git_ref}") && _git_repo="${_intercepted_repo}"
+    _intercepted_repo=$(git_cache_intercept "${_git_repo}" "${_git_ref}") && _git_repo="${_intercepted_repo}"
   fi
 
+  cd "$_target_path"
   {
-    cd "$_target_path"
     git init --quiet
     git config pull.ff only
     git remote add origin "$_git_repo"
   } >&2
-  if [ "$_sparse" = "1" ]; then
+  if [ "$_sparse" = "1" ] && [ -n "$_git_path" ]; then
     git config core.sparseCheckout true
-    [ -n "$_git_path" ] && echo "$_git_path/*" >.git/info/sparse-checkout
-
+    mkdir -p .git/info
+    echo "$_git_path/*" >.git/info/sparse-checkout
   fi
   git_fetch_ref "${PWD}/.git" "${_git_ref}" >&2 || \
     error "Unable to fetch remote. Check your Git url."
