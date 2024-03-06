@@ -56,8 +56,8 @@ git_try() {
 
 #git_fetch_ref(git_repo_path, git_ref)
 git_fetch_ref() {
-    _git_repo_path="${1?Missing git repo path as first parameter}"
-    _git_ref="${2?Mising git ref as second parameter}"
+    _git_repo_path="${1?Missing git_repo_path as first parameter}"
+    _git_ref="${2?Mising git_ref as second parameter}"
 
     # Fetches any kind of ref to its right place, tags, annotated tags, branches and commit refs
     GIT_DIR="${_git_repo_path}" git fetch -u --depth=1 origin "refs/*/${_git_ref}:refs/*/${_git_ref}" "${_git_ref}"
@@ -127,16 +127,12 @@ git_checkout() {
   if [ "$_sparse" = "1" ]; then
     git config core.sparseCheckout true
     [ -n "$_git_path" ] && echo "$_git_path/*" >.git/info/sparse-checkout
-    {
-        git_fetch_ref "${PWD}/.git" "${_git_ref}" &&
-        git checkout --quiet "${_git_ref}"
-    } >&2 || error "Unable to sparse-checkout. Check your Git ref ($_git_ref) and path ($_git_path)."
-  else
-    git fetch --quiet --tags origin >&2 || \
-      error "Unable to fetch remote. Check your Git url."
-    git checkout --quiet "$git_ref" >&2 || \
-      error "Unable to checkout ref. Check your Git ref ($git_ref)."
+
   fi
+  git_fetch_ref "${PWD}/.git" "${_git_ref}" >&2 || \
+    error "Unable to fetch remote. Check your Git url."
+  git checkout --quiet "${_git_ref}" >&2 || \
+    error "Unable to checkout ref. Check your Git ref ($_git_ref) and path ($_git_path)."
   # shellcheck disable=SC2010,SC2012
   if [ "$(ls -A | grep -v '^.git$' -c)" = "0" ]; then
     error "No files have been checked out. Check your Git ref ($_git_ref) and path ($_git_path)."
