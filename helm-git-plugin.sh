@@ -54,6 +54,15 @@ git_try() {
   GIT_TERMINAL_PROMPT=0 git ls-remote "$_git_repo" --refs >&2 || return 1
 }
 
+#git_fetch_ref(git_repo_path, git_ref)
+git_fetch_ref() {
+    _git_repo_path="${1?Missing git_repo_path as first parameter}"
+    _git_ref="${2?Mising git_ref as second parameter}"
+
+    # Fetches any kind of ref to its right place, tags, annotated tags, branches and commit refs
+    GIT_DIR="${_git_repo_path}" git fetch -u --depth=1 origin "refs/*/${_git_ref}:refs/*/${_git_ref}" "${_git_ref}"
+}
+
 #git_cache_intercept(git_repo, git_ref)
 git_cache_intercept() {
     _git_repo="${1?Missing git_repo as first parameter}"
@@ -64,28 +73,33 @@ git_cache_intercept() {
     repo_repo=$(echo "${repo_tokens}" | cut -d " " -f2)
     if [ ! -d "${HELM_GIT_REPO_CACHE}" ]; then
         debug "HELM_GIT_REPO_CACHE:${HELM_GIT_REPO_CACHE} is not a directory, cannot cache"
-        echo "${_git_repo}"
-        return
+        return 1
     fi
 
     repo_path="${HELM_GIT_REPO_CACHE}/${repo_host}/${repo_repo}"
     debug "Calculated cache path for repo ${_git_repo} is ${repo_path}"
 
     if [ ! -d "${repo_path}" ]; then
-        debug "First time I see ${_git_repo}, fetching into ${repo_path}"
-        if ! git clone --bare --branch "${_git_ref}" "${_git_repo}" "${repo_path}" 2> /dev/null; then
-            debug "Could not clone ${_git_repo}"
-        fi
+        debug "First time I see ${_git_repo}, setting it up at into ${repo_path}"
+        {
+            mkdir -p "${repo_path}" &&
+            cd "${repo_path}" &&
+            git init --bare --quiet &&
+            git remote add origin "${_git_repo}"
+        } >&2 || debug "Could not setup ${_git_repo}" && return 1
     else
         debug "${_git_repo} exists in cache"
     fi
     debug "Making sure we have the requested ref #${_git_ref}"
-    if ! GIT_REPO="${repo_path}" git tag -l "${_git_ref}" >/dev/null 2>&1; then
+    if [ -z "$(GIT_DIR="${repo_path}" git tag -l "${_git_ref}")" ]; then
         debug "Did not find ${_git_ref} in our cache for ${_git_repo}, fetching...."
-        git fetch origin --quiet "${_git_ref}"
+        # This fetches properly tags, annotated tags, branches and commits that match the name and leave them at the right place
+        git_fetch_ref "${repo_path}" "${git_ref}" ||
+            debug "Could not fetch ${_git_ref}" && return 1
     else
         debug "Ref ${_git_ref} was already cached for ${_git_repo}"
     fi
+    debug "Tags in the repo: $(GIT_DIR="${repo_path}" git tag -l)"
 
     new_git_repo="file://${repo_path}"
     debug "Returning cached repo at ${new_git_repo}"
@@ -101,24 +115,24 @@ git_checkout() {
   _git_path=$5
 
   if $CACHE_REPOS; then
-      _git_repo=$(git_cache_intercept "${_git_repo}" "${_git_ref}")
+    _intercepted_repo=$(git_cache_intercept "${_git_repo}" "${_git_ref}") && _git_repo="${_intercepted_repo}"
   fi
 
-  cd "$_target_path" >&2
-  git init --quiet
-  git config pull.ff only
-  git remote add origin "$_git_repo" >&2
-  if [ "$_sparse" = "1" ]; then
+  {
+    cd "$_target_path"
+    git init --quiet
+    git config pull.ff only
+    git remote add origin "$_git_repo"
+  } >&2
+  if [ "$_sparse" = "1" ] && [ -n "$_git_path" ]; then
     git config core.sparseCheckout true
-    [ -n "$_git_path" ] && echo "$_git_path/*" >.git/info/sparse-checkout
-    git pull --quiet --depth 1 origin "$_git_ref" >&2 || \
-      error "Unable to sparse-checkout. Check your Git ref ($_git_ref) and path ($_git_path)."
-  else
-    git fetch --quiet --tags origin >&2 || \
-      error "Unable to fetch remote. Check your Git url."
-    git checkout --quiet "$git_ref" >&2 || \
-      error "Unable to checkout ref. Check your Git ref ($git_ref)."
+    mkdir -p .git/info
+    echo "$_git_path/*" > .git/info/sparse-checkout
   fi
+  git_fetch_ref "${PWD}/.git" "${_git_ref}" >&2 || \
+    error "Unable to fetch remote. Check your Git url."
+  git checkout --quiet "${_git_ref}" >&2 || \
+    error "Unable to checkout ref. Check your Git ref ($_git_ref) and path ($_git_path)."
   # shellcheck disable=SC2010,SC2012
   if [ "$(ls -A | grep -v '^.git$' -c)" = "0" ]; then
     error "No files have been checked out. Check your Git ref ($_git_ref) and path ($_git_path)."
@@ -302,7 +316,7 @@ main() {
 
     _cached_file="${_cache_folder}/${helm_file}"
     if [ -f "${_cached_file}" ]; then
-        debug "Returning cached helm request: ${_cached_file}"
+        debug "Returning cached helm request for ${_raw_uri}: ${_cached_file}"
         cat "${_cached_file}"
         return 0
     else
