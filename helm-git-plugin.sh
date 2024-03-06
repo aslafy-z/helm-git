@@ -65,7 +65,7 @@ git_fetch_ref() {
 
 #git_cache_intercept(git_repo, git_ref)
 git_cache_intercept() {
-    _git_repo="${1?Missing git_repo as first parameer}"
+    _git_repo="${1?Missing git_repo as first parameter}"
     _git_ref="${2?Missing git_ref as second parameter}"
     debug "Trying to intercept for ${_git_repo}#${_git_ref}"
     repo_tokens=$(echo "${_git_repo}" | sed -E -e 's/[^/]+\/\/([^@]*@)?([^/]+)\/(.+)$/\2 \3/' -e 's/\.git$//g' )
@@ -130,7 +130,7 @@ git_checkout() {
     {
         git_fetch_ref "${PWD}/.git" "${_git_ref}" &&
         git checkout --quiet "${_git_ref}"
-    } >&2 || error "Unable to sparse-checkout. Check your Git ref ($git_ref) and path ($git_path)."
+    } >&2 || error "Unable to sparse-checkout. Check your Git ref ($_git_ref) and path ($_git_path)."
   else
     git fetch --quiet --tags origin >&2 || \
       error "Unable to fetch remote. Check your Git url."
@@ -139,7 +139,7 @@ git_checkout() {
   fi
   # shellcheck disable=SC2010,SC2012
   if [ "$(ls -A | grep -v '^.git$' -c)" = "0" ]; then
-    error "No files have been checked out. Check your Git ref ($git_ref) and path ($git_path)."
+    error "No files have been checked out. Check your Git ref ($_git_ref) and path ($_git_path)."
   fi
 }
 
@@ -238,7 +238,6 @@ main() {
   _raw_uri=$4  # eg: git+https://git.com/user/repo@path/to/charts/index.yaml?ref=master
 
 
-
   # If defined, use $HELM_GIT_HELM_BIN as $HELM_BIN.
   if [ -n "${HELM_GIT_HELM_BIN:-}" ]
   then
@@ -255,47 +254,63 @@ main() {
   fi
 
   # Parse URI
-
   string_starts "$_raw_uri" "$url_prefix" ||
     error "Invalid format, got '$_raw_uri'. $error_invalid_prefix"
 
-  _raw_uri=$(echo "$_raw_uri" | sed 's/^git+//')
+  # Thanks goes to https://stackoverflow.com/a/63993578
+  readonly URI_REGEX='^([^:/?#]+):(//((([^/?#]+)@)?([^/?#]+)?))?(/([^?#]*))(\?([^#]*))?(#(.*))?$'
 
-  git_proto=$(echo "$_raw_uri" | cut -d':' -f1)
-  readonly git_proto="$git_proto"
-  string_contains "$allowed_protocols" "$git_proto" ||
+  _uri_scheme=$(echo "$_raw_uri" | sed -Ene "s'$URI_REGEX'\1'p")
+  readonly _uri_scheme
+  _uri_authority=$(echo "$_raw_uri" | sed -Ene "s'$URI_REGEX'\3'p")
+  readonly _uri_authority
+  _uri_path=$(echo "$_raw_uri" | sed -Ene "s'$URI_REGEX'\8'p")
+  readonly _uri_path
+  _uri_query=$(echo "$_raw_uri" | sed -Ene "s'$URI_REGEX'\9'p")
+  readonly _uri_query
+
+  git_scheme=$(echo "$_uri_scheme" | sed -e 's/^git+//')
+  readonly git_scheme="$git_scheme"
+  string_contains "$allowed_protocols" "$git_scheme" ||
     error "$error_invalid_protocol"
 
-  git_repo=$(echo "$_raw_uri" | sed -E 's#^([^/]+//[^/]+[^@\?]+)@?[^@\?]+\??.*$#\1#')
-  readonly git_repo="$git_repo"
-  # TODO: Validate git_repo
+  git_repo_path=$(echo "${_uri_path}" | cut -d'@' -f 1)
+  readonly git_repo_path
 
-  git_path=$(echo "$_raw_uri" | sed -E 's#.*@(([^\?]*)\/)?([^\?]*).*(\?.*)?#\1#' | sed -E 's/\/$//')
-  readonly git_path="$git_path"
-  # TODO: Validate git_path
+  git_file_path=$(echo "${_uri_path}" | cut -d'@' -f 2)
+  readonly git_file_path
 
-  helm_file=$(echo "$_raw_uri" | sed -E 's#.*@(([^\?]*)\/)?([^\?]*).*(\?.*)?#\3#')
-  readonly helm_file="$helm_file"
+  helm_dir=$(dirname "${git_file_path}" | sed -r '/^[\.|/]$/d')
+  readonly helm_dir
 
-  git_ref=$(echo "$_raw_uri" | sed '/^.*ref=\([^&#]*\).*$/!d;s//\1/')
+  helm_file=$(basename "${git_file_path}")
+  readonly helm_file
+
+  git_repo="${git_scheme}://${_uri_authority}/${git_repo_path}"
+  readonly git_repo
+
+  git_ref=$(echo "$_uri_query" | sed '/^.*ref=\([^&#]*\).*$/!d;s//\1/')
   # TODO: Validate git_ref
   if [ -z "$git_ref" ]; then
     warning "git_ref is empty, defaulted to 'master'. Prefer to pin GIT ref in URI."
     git_ref="master"
   fi
-  readonly git_ref="$git_ref"
+  readonly git_ref
 
-  git_sparse=$(echo "$_raw_uri" | sed '/^.*sparse=\([^&#]*\).*$/!d;s//\1/')
+  git_sparse=$(echo "$_uri_query" | sed '/^.*sparse=\([^&#]*\).*$/!d;s//\1/')
   [ -z "$git_sparse" ] && git_sparse=1
+  readonly git_sparse
 
-  helm_depupdate=$(echo "$_raw_uri" | sed '/^.*depupdate=\([^&#]*\).*$/!d;s//\1/')
+  helm_depupdate=$(echo "$_uri_query" | sed '/^.*depupdate=\([^&#]*\).*$/!d;s//\1/')
   [ -z "$helm_depupdate" ] && helm_depupdate=1
+  readonly helm_depupdate
 
-  helm_package=$(echo "$_raw_uri" | sed '/^.*package=\([^&#]*\).*$/!d;s//\1/')
+  helm_package=$(echo "$_uri_query" | sed '/^.*package=\([^&#]*\).*$/!d;s//\1/')
   [ -z "$helm_package" ] && helm_package=1
+  readonly helm_package
 
-  debug "repo: $git_repo ref: $git_ref path: $git_path file: $helm_file sparse: $git_sparse depupdate: $helm_depupdate package: $helm_package"
-  readonly helm_repo_uri="git+$git_repo@$git_path?ref=$git_ref&sparse=$git_sparse&depupdate=$helm_depupdate&package=$helm_package"
+  debug "repo: ${git_repo} ref: ${git_ref} path: ${helm_dir} file: ${helm_file} sparse: ${git_sparse} depupdate: ${helm_depupdate} package: ${helm_package}"
+  readonly helm_repo_uri="git+${git_repo}@${helm_dir}?ref=${git_ref}&sparse=${git_sparse}&depupdate=${helm_depupdate}&package=${helm_package}"
   debug "helm_repo_uri: $helm_repo_uri"
 
   if ${CACHE_CHARTS}; then
@@ -315,6 +330,7 @@ main() {
   fi
 
   # Setup cleanup trap
+  # shellcheck disable=SC2317
   cleanup() {
     rm -rf "$git_root_path"  "${helm_home_target_path:-}"
     ${CACHE_CHARTS} || rm -rf "${helm_target_path:-}"
@@ -323,13 +339,13 @@ main() {
 
   git_root_path="$(mktemp -d "$TMPDIR/helm-git.XXXXXX")"
   readonly git_root_path="$git_root_path"
-  git_sub_path=$(path_join "$git_root_path" "$git_path")
+  git_sub_path=$(path_join "$git_root_path" "$helm_dir")
   readonly git_sub_path="$git_sub_path"
-  git_checkout "$git_sparse" "$git_root_path" "$git_repo" "$git_ref" "$git_path" ||
+  git_checkout "$git_sparse" "$git_root_path" "$git_repo" "$git_ref" "$helm_dir" ||
     error "Error while git_sparse_checkout"
 
-  if [ -f "$git_path/$helm_file" ]; then
-    cat "$git_path/$helm_file"
+  if [ -f "$helm_dir/$helm_file" ]; then
+    cat "$helm_dir/$helm_file"
     return
   fi
 
