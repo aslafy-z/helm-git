@@ -118,8 +118,8 @@ git_checkout() {
     _intercepted_repo=$(git_cache_intercept "${_git_repo}" "${_git_ref}") && _git_repo="${_intercepted_repo}"
   fi
 
-  cd "$_target_path"
   {
+    cd "$_target_path"
     git init --quiet
     git config pull.ff only
     git remote add origin "$_git_repo"
@@ -127,7 +127,7 @@ git_checkout() {
   if [ "$_sparse" = "1" ] && [ -n "$_git_path" ]; then
     git config core.sparseCheckout true
     mkdir -p .git/info
-    echo "$_git_path/*" >.git/info/sparse-checkout
+    echo "$_git_path/*" > .git/info/sparse-checkout
   fi
   git_fetch_ref "${PWD}/.git" "${_git_ref}" >&2 || \
     error "Unable to fetch remote. Check your Git url."
