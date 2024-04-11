@@ -99,7 +99,7 @@ git_cache_intercept() {
         {
             mkdir -p "${repo_path}" &&
             cd "${repo_path}" &&
-            git init --bare "${git_quiet}" >"${git_output}" 2>&1 &&
+            git init --bare ${git_quiet} >"${git_output}" 2>&1 &&
             git remote add origin "${_git_repo}" >"${git_output}" 2>&1
         } >&2 || debug "Could not setup ${_git_repo}" && return 1
     else
@@ -135,7 +135,7 @@ git_checkout() {
 
   {
     cd "$_target_path"
-    git init "${git_quiet}" >"${git_output}" 2>&1
+    git init ${git_quiet} >"${git_output}" 2>&1
     git config pull.ff only >"${git_output}" 2>&1
     git remote add origin "$_git_repo" >"${git_output}" 2>&1
   }
@@ -146,7 +146,7 @@ git_checkout() {
   fi
   git_fetch_ref "${PWD}/.git" "${_git_ref}" || \
     error "Unable to fetch remote. Check your Git url."
-  git checkout "${git_quiet}" "${_git_ref}" >"${git_output}" 2>&1 || \
+  git checkout ${git_quiet} "${_git_ref}" >"${git_output}" 2>&1 || \
     error "Unable to checkout ref. Check your Git ref ($_git_ref) and path ($_git_path)."
   # shellcheck disable=SC2010,SC2012
   if [ "$(ls -A | grep -v '^.git$' -c)" = "0" ]; then
