@@ -27,7 +27,7 @@ CACHE_CHARTS=$([ -n "${HELM_GIT_CHART_CACHE:-}" ] && echo "true" || echo "false"
 string_starts() { [ "$(echo "$1" | cut -c 1-${#2})" = "$2" ]; }
 string_ends() { [ "$(echo "$1" | cut -c $((${#1} - ${#2} + 1))-${#1})" = "$2" ]; }
 string_contains() { echo "$1" | grep -q "$2"; }
-path_join() { echo "${1:+$1/}$2" | sed 's#//#/#g'; }
+path_join() { echo "${1:+$1/}${2:-""}" | sed 's#//#/#g'; }
 
 ## Logging
 
