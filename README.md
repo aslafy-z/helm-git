@@ -1,6 +1,6 @@
 # helm-git
 
-![GitHub Actions](https://github.com/aslafy-z/helm-git/actions/workflows/release.yml/badge.svg)
+![GitHub Actions](https://github.com/aslafy-z/helm-git/actions/workflows/release.yml/badge.svg?branch=master)
 [![License MIT](https://img.shields.io/badge/license-MIT-blue.svg?style=flat)](./LICENSE)
 [![GitHub release](https://img.shields.io/github/tag-date/aslafy-z/helm-git.svg)](https://github.com/aslafy-z/helm-git/releases)
 [![semantic-release](https://img.shields.io/badge/%20%20%F0%9F%93%A6%F0%9F%9A%80-semantic--release-e10079.svg)](https://github.com/semantic-release/semantic-release)
