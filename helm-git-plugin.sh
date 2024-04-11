@@ -66,7 +66,7 @@ warning() {
 git_try() {
   _git_repo=$1
 
-  GIT_TERMINAL_PROMPT=0 git ls-remote "$_git_repo" --refs "${git_output}" || return 1
+  GIT_TERMINAL_PROMPT=0 git ls-remote "$_git_repo" --refs >"${git_output}" 2>&1 || return 1
 }
 
 #git_fetch_ref(git_repo_path, git_ref)
@@ -75,7 +75,7 @@ git_fetch_ref() {
     _git_ref="${2?Mising git_ref as second parameter}"
 
     # Fetches any kind of ref to its right place, tags, annotated tags, branches and commit refs
-    GIT_DIR="${_git_repo_path}" git fetch -u --depth=1 origin "refs/*/${_git_ref}:refs/*/${_git_ref}" "${_git_ref}"
+    GIT_DIR="${_git_repo_path}" git fetch -u --depth=1 origin "refs/*/${_git_ref}:refs/*/${_git_ref}" "${_git_ref}" >"${git_output}" 2>&1
 }
 
 #git_cache_intercept(git_repo, git_ref)
@@ -99,14 +99,14 @@ git_cache_intercept() {
         {
             mkdir -p "${repo_path}" &&
             cd "${repo_path}" &&
-            git init --bare --quiet &&
-            git remote add origin "${_git_repo}"
+            git init --bare "${git_quiet}" >"${git_output}" 2>&1 &&
+            git remote add origin "${_git_repo}" >"${git_output}" 2>&1
         } >&2 || debug "Could not setup ${_git_repo}" && return 1
     else
         debug "${_git_repo} exists in cache"
     fi
     debug "Making sure we have the requested ref #${_git_ref}"
-    if [ -z "$(GIT_DIR="${repo_path}" git tag -l "${_git_ref}")" ]; then
+    if [ -z "$(GIT_DIR="${repo_path}" git tag -l "${_git_ref}" 2>"${git_output}")" ]; then
         debug "Did not find ${_git_ref} in our cache for ${_git_repo}, fetching...."
         # This fetches properly tags, annotated tags, branches and commits that match the name and leave them at the right place
         git_fetch_ref "${repo_path}" "${git_ref}" ||
@@ -114,7 +114,7 @@ git_cache_intercept() {
     else
         debug "Ref ${_git_ref} was already cached for ${_git_repo}"
     fi
-    debug "Tags in the repo: $(GIT_DIR="${repo_path}" git tag -l)"
+    debug "Tags in the repo: $(GIT_DIR="${repo_path}" git tag -l 2>"${git_output}")"
 
     new_git_repo="file://${repo_path}"
     debug "Returning cached repo at ${new_git_repo}"
@@ -135,18 +135,18 @@ git_checkout() {
 
   {
     cd "$_target_path"
-    git init --quiet
-    git config pull.ff only
-    git remote add origin "$_git_repo"
-  } >&2
+    git init "${git_quiet}" >"${git_output}" 2>&1
+    git config pull.ff only >"${git_output}" 2>&1
+    git remote add origin "$_git_repo" >"${git_output}" 2>&1
+  }
   if [ "$_sparse" = "1" ] && [ -n "$_git_path" ]; then
-    git config core.sparseCheckout true
+    git config core.sparseCheckout true >"${git_output}" 2>&1
     mkdir -p .git/info
     echo "$_git_path/*" > .git/info/sparse-checkout
   fi
-  git_fetch_ref "${PWD}/.git" "${_git_ref}" >&2 || \
+  git_fetch_ref "${PWD}/.git" "${_git_ref}" || \
     error "Unable to fetch remote. Check your Git url."
-  git checkout --quiet "${_git_ref}" >&2 || \
+  git checkout "${git_quiet}" "${_git_ref}" >"${git_output}" 2>&1 || \
     error "Unable to checkout ref. Check your Git ref ($_git_ref) and path ($_git_path)."
   # shellcheck disable=SC2010,SC2012
   if [ "$(ls -A | grep -v '^.git$' -c)" = "0" ]; then
