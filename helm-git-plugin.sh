@@ -16,6 +16,16 @@ if [ "${HELM_GIT_DEBUG:-}" = "1" ]; then
   debug=1
 fi
 
+trace=0
+git_output="/dev/null"
+git_quiet="--quiet"
+if [ "${HELM_GIT_TRACE:-}" = "1" ]; then
+  trace=1
+  debug=1
+  git_output="/dev/stderr"
+  git_quiet=""
+fi
+
 export TMPDIR="${TMPDIR:-/tmp}"
 
 # Cache repos or charts depending on the cache path existing in the environment variables
@@ -36,6 +46,11 @@ debug() {
   return 0
 }
 
+trace() {
+  [ $trace = 1 ] && echo "Trace[$$] in plugin '$bin_name': $*" >&2
+  return 0
+}
+
 error() {
   echo "Error in plugin '$bin_name': $*" >&2
   exit 1
@@ -51,7 +66,7 @@ warning() {
 git_try() {
   _git_repo=$1
 
-  GIT_TERMINAL_PROMPT=0 git ls-remote "$_git_repo" --refs >&2 || return 1
+  GIT_TERMINAL_PROMPT=0 git ls-remote "$_git_repo" --refs >"${git_output}" 2>&1 || return 1
 }
 
 #git_fetch_ref(git_repo_path, git_ref)
@@ -60,7 +75,7 @@ git_fetch_ref() {
     _git_ref="${2?Mising git_ref as second parameter}"
 
     # Fetches any kind of ref to its right place, tags, annotated tags, branches and commit refs
-    GIT_DIR="${_git_repo_path}" git fetch -u --depth=1 origin "refs/*/${_git_ref}:refs/*/${_git_ref}" "${_git_ref}"
+    GIT_DIR="${_git_repo_path}" git fetch -u --depth=1 origin "refs/*/${_git_ref}:refs/*/${_git_ref}" "${_git_ref}" >"${git_output}" 2>&1
 }
 
 #git_cache_intercept(git_repo, git_ref)
@@ -84,14 +99,14 @@ git_cache_intercept() {
         {
             mkdir -p "${repo_path}" &&
             cd "${repo_path}" &&
-            git init --bare --quiet &&
-            git remote add origin "${_git_repo}"
+            git init --bare ${git_quiet} >"${git_output}" 2>&1 &&
+            git remote add origin "${_git_repo}" >"${git_output}" 2>&1
         } >&2 || debug "Could not setup ${_git_repo}" && return 1
     else
         debug "${_git_repo} exists in cache"
     fi
     debug "Making sure we have the requested ref #${_git_ref}"
-    if [ -z "$(GIT_DIR="${repo_path}" git tag -l "${_git_ref}")" ]; then
+    if [ -z "$(GIT_DIR="${repo_path}" git tag -l "${_git_ref}" 2>"${git_output}")" ]; then
         debug "Did not find ${_git_ref} in our cache for ${_git_repo}, fetching...."
         # This fetches properly tags, annotated tags, branches and commits that match the name and leave them at the right place
         git_fetch_ref "${repo_path}" "${git_ref}" ||
@@ -99,7 +114,7 @@ git_cache_intercept() {
     else
         debug "Ref ${_git_ref} was already cached for ${_git_repo}"
     fi
-    debug "Tags in the repo: $(GIT_DIR="${repo_path}" git tag -l)"
+    debug "Tags in the repo: $(GIT_DIR="${repo_path}" git tag -l 2>"${git_output}")"
 
     new_git_repo="file://${repo_path}"
     debug "Returning cached repo at ${new_git_repo}"
@@ -120,18 +135,18 @@ git_checkout() {
 
   {
     cd "$_target_path"
-    git init --quiet
-    git config pull.ff only
-    git remote add origin "$_git_repo"
-  } >&2
+    git init ${git_quiet} >"${git_output}" 2>&1
+    git config pull.ff only >"${git_output}" 2>&1
+    git remote add origin "$_git_repo" >"${git_output}" 2>&1
+  }
   if [ "$_sparse" = "1" ] && [ -n "$_git_path" ]; then
-    git config core.sparseCheckout true
+    git config core.sparseCheckout true >"${git_output}" 2>&1
     mkdir -p .git/info
     echo "$_git_path/*" > .git/info/sparse-checkout
   fi
-  git_fetch_ref "${PWD}/.git" "${_git_ref}" >&2 || \
+  git_fetch_ref "${PWD}/.git" "${_git_ref}" || \
     error "Unable to fetch remote. Check your Git url."
-  git checkout --quiet "${_git_ref}" >&2 || \
+  git checkout ${git_quiet} "${_git_ref}" >"${git_output}" 2>&1 || \
     error "Unable to checkout ref. Check your Git ref ($_git_ref) and path ($_git_path)."
   # shellcheck disable=SC2010,SC2012
   if [ "$(ls -A | grep -v '^.git$' -c)" = "0" ]; then
@@ -230,6 +245,7 @@ helm_inspect_name() {
 
 # main(raw_uri)
 main() {
+  trace "args: $*"
   helm_args="" # "$1 $2 $3"
   _raw_uri=$4  # eg: git+https://git.com/user/repo@path/to/charts/index.yaml?ref=master
 
@@ -258,32 +274,45 @@ main() {
 
   _uri_scheme=$(echo "$_raw_uri" | sed -Ene "s'$URI_REGEX'\1'p")
   readonly _uri_scheme
+  trace "_uri_scheme: $_uri_scheme"
+
   _uri_authority=$(echo "$_raw_uri" | sed -Ene "s'$URI_REGEX'\3'p")
   readonly _uri_authority
+  trace "_uri_authority: $_uri_authority"
+
   _uri_path=$(echo "$_raw_uri" | sed -Ene "s'$URI_REGEX'\8'p")
   readonly _uri_path
+  trace "_uri_path: $_uri_path"
+
   _uri_query=$(echo "$_raw_uri" | sed -Ene "s'$URI_REGEX'\9'p")
   readonly _uri_query
+  trace "_uri_query: $_uri_query"
 
   git_scheme=$(echo "$_uri_scheme" | sed -e 's/^git+//')
   readonly git_scheme="$git_scheme"
+  trace "git_scheme: $git_scheme"
   string_contains "$allowed_protocols" "$git_scheme" ||
     error "$error_invalid_protocol"
 
   git_repo_path=$(echo "${_uri_path}" | cut -d'@' -f 1)
   readonly git_repo_path
+  trace "git_repo_path: $git_repo_path"
 
   git_file_path=$(echo "${_uri_path}" | cut -d'@' -f 2)
   readonly git_file_path
+  trace "git_file_path: $git_file_path"
 
   helm_dir=$(dirname "${git_file_path}" | sed -r '/^[\.|/]$/d')
   readonly helm_dir
+  trace "helm_dir: $helm_dir"
 
   helm_file=$(basename "${git_file_path}")
   readonly helm_file
+  trace "helm_file: $helm_file"
 
   git_repo="${git_scheme}://${_uri_authority}/${git_repo_path}"
   readonly git_repo
+  trace "git_repo: $git_repo"
 
   git_ref=$(echo "$_uri_query" | sed '/^.*ref=\([^&#]*\).*$/!d;s//\1/')
   # TODO: Validate git_ref
@@ -292,22 +321,26 @@ main() {
     git_ref="master"
   fi
   readonly git_ref
+  trace "git_ref: $git_ref"
 
   git_sparse=$(echo "$_uri_query" | sed '/^.*sparse=\([^&#]*\).*$/!d;s//\1/')
   [ -z "$git_sparse" ] && git_sparse=1
   readonly git_sparse
+  trace "git_sparse: $git_sparse"
 
   helm_depupdate=$(echo "$_uri_query" | sed '/^.*depupdate=\([^&#]*\).*$/!d;s//\1/')
   [ -z "$helm_depupdate" ] && helm_depupdate=1
   readonly helm_depupdate
+  trace "helm_depupdate: $helm_depupdate"
 
   helm_package=$(echo "$_uri_query" | sed '/^.*package=\([^&#]*\).*$/!d;s//\1/')
   [ -z "$helm_package" ] && helm_package=1
   readonly helm_package
+  trace "helm_package: $helm_package"
 
   debug "repo: ${git_repo} ref: ${git_ref} path: ${helm_dir} file: ${helm_file} sparse: ${git_sparse} depupdate: ${helm_depupdate} package: ${helm_package}"
   readonly helm_repo_uri="git+${git_repo}@${helm_dir}?ref=${git_ref}&sparse=${git_sparse}&depupdate=${helm_depupdate}&package=${helm_package}"
-  debug "helm_repo_uri: $helm_repo_uri"
+  trace "helm_repo_uri: $helm_repo_uri"
 
   if ${CACHE_CHARTS}; then
     _request_hash=$(echo "${_raw_uri}" | md5sum | cut -d " " -f1)
@@ -335,8 +368,12 @@ main() {
 
   git_root_path="$(mktemp -d "$TMPDIR/helm-git.XXXXXX")"
   readonly git_root_path="$git_root_path"
+  trace "git_root_path: $git_root_path"
+
   git_sub_path=$(path_join "$git_root_path" "$helm_dir")
   readonly git_sub_path="$git_sub_path"
+  trace "git_sub_path: $git_sub_path"
+
   git_checkout "$git_sparse" "$git_root_path" "$git_repo" "$git_ref" "$helm_dir" ||
     error "Error while git_sparse_checkout"
 
@@ -352,8 +389,11 @@ main() {
   fi
 
   readonly helm_target_path="$helm_target_path"
+  trace "helm_target_path: $helm_target_path"
+
   helm_target_file="$(path_join "$helm_target_path" "$helm_file")"
   readonly helm_target_file="$helm_target_file"
+  trace "helm_target_file: $helm_target_file"
 
   # Set helm home
   if helm_v2; then
