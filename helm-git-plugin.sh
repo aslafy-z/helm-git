@@ -178,7 +178,7 @@ helm_package() {
   helm_args=${helm_args:-}
 
   tmp_target="$(mktemp -d "$TMPDIR/helm-git.XXXXXX")"
-  cp -r "$_source_path" "$tmp_target/$_chart_name"
+  cp -rL "$_source_path" "$tmp_target/$_chart_name"
   _source_path="$tmp_target/$_chart_name"
   cd "$_target_path" >&2
 
