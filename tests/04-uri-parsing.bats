@@ -31,9 +31,7 @@ load 'test-helper'
 
 @test "should parse with sparse disabled" {
     parse_uri "git+https://github.com/jetstack/cert-manager@deploy/charts/index.yaml?ref=master&sparse=0"
-    skip "$git_repo // $helm_dir // $git_ref // $git_sparse"
-
-    [ $git_repo = "https://git@github.com/jetstack/cert-manager" ]
+    [ $git_repo = "https://github.com/jetstack/cert-manager" ]
     [ $helm_dir = "deploy/charts" ]
     [ $git_ref = "master" ]
     [ $git_sparse = 0 ]
@@ -41,9 +39,7 @@ load 'test-helper'
 
 @test "should parse with sparse enabled" {
     parse_uri "git+https://github.com/jetstack/cert-manager@deploy/charts/index.yaml?ref=master&sparse=1"
-    skip "$git_repo // $helm_dir // $git_ref // $git_sparse"
-
-    [ $git_repo = "https://git@github.com/jetstack/cert-manager" ]
+    [ $git_repo = "https://github.com/jetstack/cert-manager" ]
     [ $helm_dir = "deploy/charts" ]
     [ $git_ref = "master" ]
     [ $git_sparse = 1 ]
@@ -66,14 +62,14 @@ load 'test-helper'
 @test "should parse with empty path without slash" {
     parse_uri "git+https://github.com/hashicorp/vault-helm@index.yaml?ref=v0.5.0"
     [ $git_repo = "https://github.com/hashicorp/vault-helm" ]
-    [ $helm_dir = "" ]
+    [ -z $helm_dir ]
     [ $git_ref = "v0.5.0" ]
 }
 
 @test "should parse with empty path with slash" {
     parse_uri "git+https://github.com/hashicorp/vault-helm@/index.yaml?ref=v0.5.0"
     [ $git_repo = "https://github.com/hashicorp/vault-helm" ]
-    [ $helm_dir = "" ]
+    [ -z $helm_dir ]
     [ $git_ref = "v0.5.0" ]
 }
 
