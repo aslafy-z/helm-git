@@ -314,7 +314,6 @@ parse_uri() {
 
   git_ref=$(echo "$_uri_query" | sed '/^.*ref=\([^&#]*\).*$/!d;s//\1/')
   # TODO: Validate git_ref
-  readonly git_ref
   if [ -z "$git_ref" ]; then
     warning "git_ref was not given, trying to discover default branch from remote. Prefer to pin GIT ref in URI."
     git_ref=$(git_get_default_branch "$git_repo")
@@ -325,6 +324,7 @@ parse_uri() {
       debug "Discovered remote default branch: '$git_ref'"
     fi
   fi
+  readonly git_ref
   trace "git_ref: $git_ref"
 
   git_sparse=$(echo "$_uri_query" | sed '/^.*sparse=\([^&#]*\).*$/!d;s//\1/')
