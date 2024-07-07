@@ -82,12 +82,12 @@ git_try() {
   GIT_TERMINAL_PROMPT=0 git ls-remote "$_git_repo" --refs >"${git_output}" 2>&1 || return 1
 }
 
-#git_fetch_ref(git_repo_path)
-git_fetch_default_branch() {
+#git_get_default_branch(git_repo_path)
+git_get_default_branch() {
   _git_repo_path="${1?Missing git_repo_path as first parameter}"
 
   # Fetch default branch
-  git rev-parse --abbrev-ref origin/HEAD | cut -c8-
+  GIT_DIR="${_git_repo_path}" git rev-parse --abbrev-ref origin/HEAD | cut -c8-
 }
 
 #git_fetch_ref(git_repo_path, git_ref)
@@ -97,7 +97,7 @@ git_fetch_ref() {
 
   # Retrieve default branch if no ref is given
   if [ -z "$_git_ref" ]; then
-    _git_ref=$(git_fetch_default_branch "$_git_repo_path")
+    _git_ref=$(git_get_default_branch "$_git_repo_path")
   fi
 
   # Fetches any kind of ref to its right place, tags, annotated tags, branches and commit refs
