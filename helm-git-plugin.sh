@@ -87,7 +87,7 @@ git_get_default_branch() {
   _git_repo_path="${1?Missing git_repo_path as first parameter}"
 
   # Fetch default branch
-  echo $GIT_DIR; exit 1
+  debug $GIT_DIR; exit 1
   GIT_DIR="${_git_repo_path}" git rev-parse --abbrev-ref origin/HEAD | cut -c8-
 }
 
