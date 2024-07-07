@@ -279,7 +279,7 @@ parse_uri() {
 
   _git_path=$(echo "${_uri_path}" | cut -d'@' -f 1)
   readonly _git_path
-  trace "_git_repo_path: $_git_path"
+  trace "_git_path: $_git_path"
 
   git_file_path=$(echo "${_uri_path}" | cut -d'@' -f 2)
   readonly git_file_path
@@ -293,7 +293,7 @@ parse_uri() {
   readonly helm_file
   trace "helm_file: $helm_file"
 
-  git_repo="${_git_scheme}://${_uri_authority}/${_git_repo_path}"
+  git_repo="${_git_scheme}://${_uri_authority}/${_git_path}"
   readonly git_repo
   trace "git_repo: $git_repo"
 
