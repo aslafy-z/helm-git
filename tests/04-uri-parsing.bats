@@ -88,7 +88,7 @@ load 'test-helper'
 }
 
 @test "should discover path without path separator" {
-    parse_uri "git+https://github.com/jetstack/cert-manager"
+    parse_uri "git+https://github.com/jetstack/cert-manager/index.yaml"
     [ $git_repo = "https://github.com/jetstack/cert-manager" ]
     [ -z $helm_dir ]
     [ $helm_file = "index.yaml" ]
