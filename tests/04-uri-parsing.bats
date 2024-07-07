@@ -15,3 +15,8 @@ parse_fun() {
     parse_fun "git+https://github.com/jetstack/cert-manager@2"
     [ $a = "git+https://github.com/jetstack/cert-manager@2" ]
 }
+
+@test "test fun 3" {
+    parse_fun "git+https://github.com/jetstack/cert-manager@2"
+    [ $a = "git+https://github.com/jetstack/cert-manager@3" ]
+}
