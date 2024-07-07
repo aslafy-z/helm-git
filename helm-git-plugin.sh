@@ -321,7 +321,7 @@ parse_uri() {
       warning "git_ref could not be discovered from remote. Defaulting to 'master'. Prefer to pin GIT ref in URI."
       git_ref="master"
     else
-      debug "Discovered remote default branch: '$git_ref'"
+      debug "Discovered default branch from remote: '$git_ref'. Prefer to pin GIT ref in URI."
     fi
   fi
   readonly git_ref
