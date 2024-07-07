@@ -292,8 +292,8 @@ main() {
   string_contains "$allowed_protocols" "$git_scheme" ||
     error "$error_invalid_protocol"
 
-  git_repo_path=$(echo "${_uri_path}" | cut -d'@' -f 1)
-  git_file_path=$(echo "${_uri_path}" | cut -d'@' -f 2)
+  git_repo_path=$(echo "${_uri_path}" | awk -F'@' '{print $1}')
+  git_file_path=$(echo "${_uri_path}" | awk -F'@' '{print $2}')
   if [ -z "$git_file_path" ]; then
     git_file_path=$(basename "$git_repo_path")
     git_repo_path=$(dirname "$git_repo_path")
