@@ -256,40 +256,33 @@ parse_uri() {
   readonly URI_REGEX='^([^:/?#]+):(//((([^/?#]+)@)?([^/?#]+)?))?(/([^?#]*))(\?([^#]*))?(#(.*))?$'
 
   _uri_scheme=$(echo "$_raw_uri" | sed -Ene "s'$URI_REGEX'\1'p")
-  readonly _uri_scheme
   trace "_uri_scheme: $_uri_scheme"
 
   _uri_authority=$(echo "$_raw_uri" | sed -Ene "s'$URI_REGEX'\3'p")
-  readonly _uri_authority
   trace "_uri_authority: $_uri_authority"
 
   _uri_path=$(echo "$_raw_uri" | sed -Ene "s'$URI_REGEX'\8'p")
-  readonly _uri_path
   trace "_uri_path: $_uri_path"
 
   _uri_query=$(echo "$_raw_uri" | sed -Ene "s'$URI_REGEX'\9'p")
-  readonly _uri_query
   trace "_uri_query: $_uri_query"
 
   _git_scheme=$(echo "$_uri_scheme" | sed -e 's/^git+//')
-  readonly _git_scheme
   trace "_git_scheme: $_git_scheme"
   string_contains "$allowed_protocols" "$_git_scheme" ||
     error "$error_invalid_protocol"
 
   _git_path=$(echo "${_uri_path}" | cut -d'@' -f 1)
-  readonly _git_path
   trace "_git_path: $_git_path"
 
-  git_file_path=$(echo "${_uri_path}" | cut -d'@' -f 2)
-  readonly git_file_path
-  trace "git_file_path: $git_file_path"
+  _git_file_path=$(echo "${_uri_path}" | cut -d'@' -f 2)
+  trace "_git_file_path: $_git_file_path"
 
-  helm_dir=$(dirname "${git_file_path}" | sed -r '/^[\.|/]$/d')
+  helm_dir=$(dirname "${_git_file_path}" | sed -r '/^[\.|/]$/d')
   readonly helm_dir
   trace "helm_dir: $helm_dir"
 
-  helm_file=$(basename "${git_file_path}")
+  helm_file=$(basename "${_git_file_path}")
   readonly helm_file
   trace "helm_file: $helm_file"
 
