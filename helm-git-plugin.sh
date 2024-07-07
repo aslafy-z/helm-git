@@ -386,7 +386,7 @@ main() {
     rm -rf "$git_root_path" "${helm_home_target_path:-}"
     ${CACHE_CHARTS} || rm -rf "${helm_target_path:-}"
   }
-  trap cleanup EXIT
+  # trap cleanup EXIT
 
   git_root_path="$(mktemp -d "$TMPDIR/helm-git.XXXXXX")"
   readonly git_root_path="$git_root_path"
