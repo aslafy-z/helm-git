@@ -293,10 +293,13 @@ main() {
     error "$error_invalid_protocol"
 
   git_repo_path=$(echo "${_uri_path}" | cut -d'@' -f 1)
+  git_file_path=$(echo "${_uri_path}" | cut -d'@' -f 2)
+  if [ -z "$git_file_path" ]; then
+    git_file_path=$(basename "$git_repo_path")
+    git_repo_path=$(dirname "$git_repo_path")
+  fi
   readonly git_repo_path
   trace "git_repo_path: $git_repo_path"
-
-  git_file_path=$(echo "${_uri_path}" | cut -d'@' -f 2)
   readonly git_file_path
   trace "git_file_path: $git_file_path"
 
