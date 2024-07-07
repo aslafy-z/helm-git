@@ -82,10 +82,23 @@ git_try() {
   GIT_TERMINAL_PROMPT=0 git ls-remote "$_git_repo" --refs >"${git_output}" 2>&1 || return 1
 }
 
+#git_fetch_ref(git_repo_path)
+git_fetch_default_branch() {
+  _git_repo_path="${1?Missing git_repo_path as first parameter}"
+
+  # Fetch default branch
+  git rev-parse --abbrev-ref origin/HEAD | cut -c8-
+}
+
 #git_fetch_ref(git_repo_path, git_ref)
 git_fetch_ref() {
   _git_repo_path="${1?Missing git_repo_path as first parameter}"
   _git_ref="${2?Mising git_ref as second parameter}"
+
+  # Retrieve default branch if no ref is given
+  if [ -z "$_git_ref" ]; then
+    _git_ref=$(git_fetch_default_branch "$_git_repo_path")
+  fi
 
   # Fetches any kind of ref to its right place, tags, annotated tags, branches and commit refs
   GIT_DIR="${_git_repo_path}" git fetch -u --depth=1 origin "refs/*/${_git_ref}:refs/*/${_git_ref}" "${_git_ref}" >"${git_output}" 2>&1
@@ -122,7 +135,7 @@ git_cache_intercept() {
   if [ -z "$(GIT_DIR="${repo_path}" git tag -l "${_git_ref}" 2>"${git_output}")" ]; then
     debug "Did not find ${_git_ref} in our cache for ${_git_repo}, fetching...."
     # This fetches properly tags, annotated tags, branches and commits that match the name and leave them at the right place
-    git_fetch_ref "${repo_path}" "${git_ref}" ||
+    git_fetch_ref "${repo_path}" "${_git_ref}" ||
       debug "Could not fetch ${_git_ref}" && return 1
   else
     debug "Ref ${_git_ref} was already cached for ${_git_repo}"
@@ -305,10 +318,6 @@ parse_uri() {
 
   git_ref=$(echo "$_uri_query" | sed '/^.*ref=\([^&#]*\).*$/!d;s//\1/')
   # TODO: Validate git_ref
-  if [ -z "$git_ref" ]; then
-    warning "git_ref is empty, defaulted to 'master'. Prefer to pin GIT ref in URI."
-    git_ref="master"
-  fi
   readonly git_ref
   trace "git_ref: $git_ref"
 
