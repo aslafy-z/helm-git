@@ -342,7 +342,7 @@ main() {
     export HELM_BIN="helm"
   fi
 
-  parse_uri $_raw_uri
+  parse_uri "$_raw_uri"
 
   debug "repo: ${git_repo} ref: ${git_ref} path: ${helm_dir} file: ${helm_file} sparse: ${git_sparse} depupdate: ${helm_depupdate} package: ${helm_package}"
   readonly helm_repo_uri="git+${git_repo}@${helm_dir}?ref=${git_ref}&sparse=${git_sparse}&depupdate=${helm_depupdate}&package=${helm_package}"
