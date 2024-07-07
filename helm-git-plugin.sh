@@ -86,9 +86,8 @@ git_try() {
 git_get_default_branch() {
   _git_repo_path="${1?Missing git_repo_path as first parameter}"
 
-  # Fetch default branch
-  debug $_git_repo_path; exit 1
-  GIT_DIR="${_git_repo_path}" git rev-parse --abbrev-ref origin/HEAD | cut -c8-
+  # Fetch default branch from remote
+  GIT_DIR="${_git_repo_path}" git ls-remote --symref origin HEAD 2>"${git_output}" | awk '/^ref:/ {sub(/refs\/heads\//, "", $2); print $2}'
 }
 
 #git_fetch_ref(git_repo_path, git_ref)
