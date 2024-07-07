@@ -29,6 +29,13 @@ load 'test-helper'
     [ $git_ref = "master" ]
 }
 
+@test "should parse with username and password" {
+    parse_uri "git+https://git:foo%2Fbar@github.com/jetstack/cert-manager@deploy/charts/index.yaml?ref=master"
+    [ $git_repo = "https://git:foo%2Fbar@github.com/jetstack/cert-manager" ]
+    [ $helm_dir = "deploy/charts" ]
+    [ $git_ref = "master" ]
+}
+
 @test "should parse with sparse disabled" {
     parse_uri "git+https://github.com/jetstack/cert-manager@deploy/charts/index.yaml?ref=master&sparse=0"
     [ $git_repo = "https://github.com/jetstack/cert-manager" ]
