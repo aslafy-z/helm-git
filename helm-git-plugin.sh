@@ -276,7 +276,7 @@ parse_uri() {
   _git_file_path=$(echo "${_uri_path}" | awk -F'@' '{print $2}')
   if [ -z "$_git_file_path" ]; then
     _git_file_path=$(basename "$_git_path")
-    _git_path=$(dirname "$_git_file_path")
+    _git_path=$(dirname "$_git_path")
   fi
   trace "_git_path: $_git_path"
   trace "_git_file_path: $_git_file_path"
