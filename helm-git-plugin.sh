@@ -243,25 +243,10 @@ helm_inspect_name() {
   [ -n "$name" ]
 }
 
-# main(raw_uri)
-main() {
-  trace "args: $*"
-  helm_args="" # "$1 $2 $3"
-  _raw_uri=$4  # eg: git+https://git.com/user/repo@path/to/charts/index.yaml?ref=master
-
-  # If defined, use $HELM_GIT_HELM_BIN as $HELM_BIN.
-  if [ -n "${HELM_GIT_HELM_BIN:-}" ]; then
-    export HELM_BIN="${HELM_GIT_HELM_BIN}"
-  # If not, use $HELM_BIN after sanitizing it or default to 'helm'.
-  elif
-    [ -z "$HELM_BIN" ] ||
-      # terraform-provider-helm: https://github.com/aslafy-z/helm-git/issues/101
-      echo "$HELM_BIN" | grep -q "terraform-provider-helm" ||
-      # helm-diff plugin: https://github.com/aslafy-z/helm-git/issues/107
-      echo "$HELM_BIN" | grep -q "diff"
-  then
-    export HELM_BIN="helm"
-  fi
+# parse_uri(raw_uri)
+# sets git_repo, git_ref, helm_dir, helm_file, git_sparse, helm_depupdate, helm_package
+parse_uri() {
+  _raw_uri=$1
 
   # Parse URI
   string_starts "$_raw_uri" "$url_prefix" ||
@@ -286,15 +271,15 @@ main() {
   readonly _uri_query
   trace "_uri_query: $_uri_query"
 
-  git_scheme=$(echo "$_uri_scheme" | sed -e 's/^git+//')
-  readonly git_scheme="$git_scheme"
-  trace "git_scheme: $git_scheme"
-  string_contains "$allowed_protocols" "$git_scheme" ||
+  _git_scheme=$(echo "$_uri_scheme" | sed -e 's/^git+//')
+  readonly _git_scheme
+  trace "_git_scheme: $_git_scheme"
+  string_contains "$allowed_protocols" "$_git_scheme" ||
     error "$error_invalid_protocol"
 
-  git_repo_path=$(echo "${_uri_path}" | cut -d'@' -f 1)
-  readonly git_repo_path
-  trace "git_repo_path: $git_repo_path"
+  _git_path=$(echo "${_uri_path}" | cut -d'@' -f 1)
+  readonly _git_path
+  trace "_git_repo_path: $_git_path"
 
   git_file_path=$(echo "${_uri_path}" | cut -d'@' -f 2)
   readonly git_file_path
@@ -308,7 +293,7 @@ main() {
   readonly helm_file
   trace "helm_file: $helm_file"
 
-  git_repo="${git_scheme}://${_uri_authority}/${git_repo_path}"
+  git_repo="${_git_scheme}://${_uri_authority}/${_git_repo_path}"
   readonly git_repo
   trace "git_repo: $git_repo"
 
@@ -335,6 +320,29 @@ main() {
   [ -z "$helm_package" ] && helm_package=1
   readonly helm_package
   trace "helm_package: $helm_package"
+}
+
+# main(cert_file, key_file, ca_file, raw_uri)
+main() {
+  trace "args: $*"
+  helm_args="" # "$1 $2 $3"
+  _raw_uri=$4  # eg: git+https://git.com/user/repo@path/to/charts/index.yaml?ref=master
+
+  # If defined, use $HELM_GIT_HELM_BIN as $HELM_BIN.
+  if [ -n "${HELM_GIT_HELM_BIN:-}" ]; then
+    export HELM_BIN="${HELM_GIT_HELM_BIN}"
+  # If not, use $HELM_BIN after sanitizing it or default to 'helm'.
+  elif
+    [ -z "$HELM_BIN" ] ||
+      # terraform-provider-helm: https://github.com/aslafy-z/helm-git/issues/101
+      echo "$HELM_BIN" | grep -q "terraform-provider-helm" ||
+      # helm-diff plugin: https://github.com/aslafy-z/helm-git/issues/107
+      echo "$HELM_BIN" | grep -q "diff"
+  then
+    export HELM_BIN="helm"
+  fi
+
+  parse_uri $_raw_uri
 
   debug "repo: ${git_repo} ref: ${git_ref} path: ${helm_dir} file: ${helm_file} sparse: ${git_sparse} depupdate: ${helm_depupdate} package: ${helm_package}"
   readonly helm_repo_uri="git+${git_repo}@${helm_dir}?ref=${git_ref}&sparse=${git_sparse}&depupdate=${helm_depupdate}&package=${helm_package}"
