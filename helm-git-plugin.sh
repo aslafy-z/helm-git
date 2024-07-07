@@ -84,22 +84,17 @@ git_try() {
 
 #git_get_default_branch(git_repo_path)
 git_get_default_branch() {
-  _git_repo_path="${1?Missing git_repo_path as first parameter}"
+  _git_repo="${1?Missing git_repo as first parameter}"
 
   # Fetch default branch from remote
-  GIT_DIR="${_git_repo_path}" git ls-remote --symref origin HEAD 2>"${git_output}" | awk '/^ref:/ {sub(/refs\/heads\//, "", $2); print $2}'
+  _git_symref=$(GIT_TERMINAL_PROMPT=0  git ls-remote --symref "${_git_repo}" origin HEAD 2>"${git_output}") || return
+  echo "$_git_symref" | awk '/^ref:/ {sub(/refs\/heads\//, "", $2); print $2}' || return
 }
 
 #git_fetch_ref(git_repo_path, git_ref)
 git_fetch_ref() {
   _git_repo_path="${1?Missing git_repo_path as first parameter}"
   _git_ref="${2?Mising git_ref as second parameter}"
-
-  # Retrieve default branch if no ref is given
-  if [ -z "$_git_ref" ]; then
-    _git_ref=$(git_get_default_branch "$_git_repo_path")
-    debug "Found '$_git_ref' as default branch"
-  fi
 
   # Fetches any kind of ref to its right place, tags, annotated tags, branches and commit refs
   GIT_DIR="${_git_repo_path}" git fetch -u --depth=1 origin "refs/*/${_git_ref}:refs/*/${_git_ref}" "${_git_ref}" >"${git_output}" 2>&1
@@ -320,6 +315,16 @@ parse_uri() {
   git_ref=$(echo "$_uri_query" | sed '/^.*ref=\([^&#]*\).*$/!d;s//\1/')
   # TODO: Validate git_ref
   readonly git_ref
+  if [ -z "$git_ref" ]; then
+    warning "git_ref was not given, trying to discover default branch from remote. Prefer to pin GIT ref in URI."
+    git_ref=$(git_get_default_branch "$git_repo")
+    if [ -z "$git_ref" ]; then
+      warning "git_ref could not be discovered from remote. Defaulting to 'master'. Prefer to pin GIT ref in URI."
+      git_ref="master"
+    else
+      debug "Discovered remote default branch: '$git_ref'"
+    fi
+  fi
   trace "git_ref: $git_ref"
 
   git_sparse=$(echo "$_uri_query" | sed '/^.*sparse=\([^&#]*\).*$/!d;s//\1/')
