@@ -98,6 +98,7 @@ git_fetch_ref() {
   # Retrieve default branch if no ref is given
   if [ -z "$_git_ref" ]; then
     _git_ref=$(git_get_default_branch "$_git_repo_path")
+    debug "Found '$_git_ref' as default branch"
   fi
 
   # Fetches any kind of ref to its right place, tags, annotated tags, branches and commit refs
