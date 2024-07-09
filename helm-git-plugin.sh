@@ -20,9 +20,9 @@ error_invalid_protocol="Protocol not allowed, it should match one of theses: $al
 readonly error_invalid_protocol
 
 # Debug & trace output configuration
-cleanup=1
 debug=0
 trace=0
+cleanup=1
 git_output="/dev/null"
 git_quiet="--quiet"
 if [ "${HELM_GIT_DEBUG:-}" = "1" ]; then
@@ -36,9 +36,9 @@ if [ "${HELM_GIT_TRACE:-}" = "1" ]; then
   git_output="/dev/stderr"
   git_quiet=""
 fi
-readonly cleanup
 readonly debug
 readonly trace
+readonly cleanup
 readonly git_output
 readonly git_quiet
 
