@@ -36,9 +36,16 @@ readonly git_quiet
 export TMPDIR="${TMPDIR:-/tmp}"
 
 # Cache repos or charts depending on the cache path existing in the environment variables
-cache_repos_enabled=$([ -n "${HELM_GIT_REPO_CACHE:-}" ] && echo 1 || echo 0)
+cache_repos_enabled=0
+if [ -n "${HELM_GIT_REPO_CACHE:-}" ]; then
+  cache_repos_enabled=1
+fi
 readonly cache_repos_enabled
-cache_charts_enabled=$([ -n "${HELM_GIT_CHART_CACHE:-}" ] && echo 1 || echo 0)
+
+cache_charts_enabled=0
+if [ -n "${HELM_GIT_CHART_CACHE:-}" ]; then
+  cache_charts_enabled=1
+fi
 readonly cache_charts_enabled
 
 ## Tooling
