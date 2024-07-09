@@ -4,18 +4,22 @@
 
 set -eu
 
-readonly bin_name="helm-git"
-readonly allowed_protocols="https http file ssh"
-readonly url_prefix="git+"
+bin_name="helm-git"
+readonly bin_name
+allowed_protocols="https http file ssh"
+readonly allowed_protocols
+url_prefix="git+"
+readonly url_prefix
+error_invalid_prefix="Git url should start with '$url_prefix'. Please check helm-git usage."
+readonly error_invalid_prefix
+error_invalid_protocol="Protocol not allowed, it should match one of theses: $allowed_protocols."
+readonly error_invalid_protocol
 
-readonly error_invalid_prefix="Git url should start with '$url_prefix'. Please check helm-git usage."
-readonly error_invalid_protocol="Protocol not allowed, it should match one of theses: $allowed_protocols."
-
+# Debug & trace output configuration
 debug=0
 if [ "${HELM_GIT_DEBUG:-}" = "1" ]; then
   debug=1
 fi
-
 trace=0
 git_output="/dev/null"
 git_quiet="--quiet"
@@ -25,7 +29,12 @@ if [ "${HELM_GIT_TRACE:-}" = "1" ]; then
   git_output="/dev/stderr"
   git_quiet=""
 fi
+readonly trace
+readonly debug
+readonly git_output
+readonly git_quiet
 
+# Set default value for TMPDIR
 export TMPDIR="${TMPDIR:-/tmp}"
 
 # Cache repos or charts depending on the cache path existing in the environment variables
