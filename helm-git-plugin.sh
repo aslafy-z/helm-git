@@ -4,6 +4,10 @@
 
 set -eu
 
+# Mark this shell
+# shellcheck disable=SC2034
+HELM_GIT_SOURCE=1
+
 bin_name="helm-git"
 readonly bin_name
 allowed_protocols="https http file ssh"
@@ -15,6 +19,7 @@ readonly error_invalid_prefix
 error_invalid_protocol="Protocol not allowed, it should match one of theses: $allowed_protocols."
 readonly error_invalid_protocol
 
+# Debug & trace output configuration
 debug=0
 if [ "${HELM_GIT_DEBUG:-}" = "1" ]; then
   debug=1
@@ -33,6 +38,7 @@ readonly debug
 readonly git_output
 readonly git_quiet
 
+# Set default value for TMPDIR
 export TMPDIR="${TMPDIR:-/tmp}"
 
 # Cache repos or charts depending on the cache path existing in the environment variables
@@ -41,7 +47,6 @@ if [ -n "${HELM_GIT_REPO_CACHE:-}" ]; then
   cache_repos_enabled=1
 fi
 readonly cache_repos_enabled
-
 cache_charts_enabled=0
 if [ -n "${HELM_GIT_CHART_CACHE:-}" ]; then
   cache_charts_enabled=1
@@ -85,6 +90,15 @@ git_try() {
   GIT_TERMINAL_PROMPT=0 git ls-remote "$_git_repo" --refs >"${git_output}" 2>&1 || return 1
 }
 
+#git_get_default_branch(git_repo_path)
+git_get_default_branch() {
+  _git_repo="${1?Missing git_repo as first parameter}"
+
+  # Fetch default branch from remote
+  _git_symref=$(GIT_TERMINAL_PROMPT=0  git ls-remote --symref "${_git_repo}" origin HEAD 2>"${git_output}") || return
+  echo "$_git_symref" | awk '/^ref:/ {sub(/refs\/heads\//, "", $2); print $2}' || return
+}
+
 #git_fetch_ref(git_repo_path, git_ref)
 git_fetch_ref() {
   _git_repo_path="${1?Missing git_repo_path as first parameter}"
@@ -125,7 +139,7 @@ git_cache_intercept() {
   if [ -z "$(GIT_DIR="${repo_path}" git tag -l "${_git_ref}" 2>"${git_output}")" ]; then
     debug "Did not find ${_git_ref} in our cache for ${_git_repo}, fetching...."
     # This fetches properly tags, annotated tags, branches and commits that match the name and leave them at the right place
-    git_fetch_ref "${repo_path}" "${git_ref}" ||
+    git_fetch_ref "${repo_path}" "${_git_ref}" ||
       debug "Could not fetch ${_git_ref}" && return 1
   else
     debug "Ref ${_git_ref} was already cached for ${_git_repo}"
@@ -145,7 +159,7 @@ git_checkout() {
   _git_ref=$4
   _git_path=$5
 
-  if [ $cache_repos_enabled = 1 ]; then
+  if [ "$cache_repos_enabled" = 1 ]; then
     _intercepted_repo=$(git_cache_intercept "${_git_repo}" "${_git_ref}") && _git_repo="${_intercepted_repo}"
   fi
 
@@ -288,10 +302,13 @@ parse_uri() {
   string_contains "$allowed_protocols" "$_git_scheme" ||
     error "$error_invalid_protocol"
 
-  _git_path=$(echo "${_uri_path}" | cut -d'@' -f 1)
+  _git_path=$(echo "${_uri_path}" | awk -F'@' '{print $1}')
+  _git_file_path=$(echo "${_uri_path}" | awk -F'@' '{print $2}')
+  if [ -z "$_git_file_path" ]; then
+    _git_file_path=$(basename "$_git_path")
+    _git_path=$(dirname "$_git_path")
+  fi
   trace "_git_path: $_git_path"
-
-  _git_file_path=$(echo "${_uri_path}" | cut -d'@' -f 2)
   trace "_git_file_path: $_git_file_path"
 
   helm_dir=$(dirname "${_git_file_path}" | sed -r '/^[\.|/]$/d')
@@ -309,8 +326,14 @@ parse_uri() {
   git_ref=$(echo "$_uri_query" | sed '/^.*ref=\([^&#]*\).*$/!d;s//\1/')
   # TODO: Validate git_ref
   if [ -z "$git_ref" ]; then
-    warning "git_ref is empty, defaulted to 'master'. Prefer to pin GIT ref in URI."
-    git_ref="master"
+    warning "git_ref was not given, trying to discover default branch from remote. Prefer to pin GIT ref in URI."
+    git_ref=$(git_get_default_branch "$git_repo")
+    if [ -z "$git_ref" ]; then
+      warning "git_ref could not be discovered from remote. Defaulting to 'master'. Prefer to pin GIT ref in URI."
+      git_ref="master"
+    else
+      debug "Discovered default branch from remote: '$git_ref'. Prefer to pin GIT ref in URI."
+    fi
   fi
   readonly git_ref
   trace "git_ref: $git_ref"
@@ -357,7 +380,7 @@ main() {
   readonly helm_repo_uri="git+${git_repo}@${helm_dir}?ref=${git_ref}&sparse=${git_sparse}&depupdate=${helm_depupdate}&package=${helm_package}"
   trace "helm_repo_uri: $helm_repo_uri"
 
-  if [ $cache_charts_enabled = 1 ]; then
+  if [ "$cache_charts_enabled" = 1 ]; then
     _request_hash=$(echo "${_raw_uri}" | md5sum | cut -d " " -f1)
 
     _cache_folder="${HELM_GIT_CHART_CACHE}/${_request_hash}"
@@ -377,7 +400,7 @@ main() {
   # shellcheck disable=SC2317
   cleanup() {
     rm -rf "$git_root_path" "${helm_home_target_path:-}"
-    [ $cache_charts_enabled = 0 ] || rm -rf "${helm_target_path:-}"
+    [ "$cache_charts_enabled" = 0 ] || rm -rf "${helm_target_path:-}"
   }
   trap cleanup EXIT
 
@@ -397,7 +420,7 @@ main() {
     return
   fi
 
-  if [ $cache_charts_enabled = 1 ]; then
+  if [ "$cache_charts_enabled" = 1 ]; then
     helm_target_path="${_cache_folder}"
   else
     helm_target_path="$(mktemp -d "$TMPDIR/helm-git.XXXXXX")"

@@ -18,7 +18,7 @@ This fits multiple use cases:
 
 Use `helm` CLI to install this plugin:
 
-    helm plugin install https://github.com/aslafy-z/helm-git --version 0.17.0
+    helm plugin install https://github.com/aslafy-z/helm-git --version 1.2.0
 
 To use the plugin, you only need `git`. If you want to build the plugin from source, or you want to contribute
 to the plugin, please see [these instructions](.github/CONTRIBUTING.md).
@@ -33,15 +33,16 @@ to the plugin, please see [these instructions](.github/CONTRIBUTING.md).
 
 Here's the Git urls format, followed by examples:
 
-    git+https://[provider.com]/[user]/[repo]@[path/to/charts][?[ref=git-ref][&sparse=0][&depupdate=0][&package=0]]
-    git+ssh://git@[provider.com]/[user]/[repo]@[path/to/charts][?[ref=git-ref][&sparse=0][&depupdate=0][&package=0]]
-    git+file://[path/to/repo]@[path/to/charts][?[ref=git-ref][&sparse=0][&depupdate=0][&package=0]]
+    git+https://[username[:password]@]/<path/to/repo>[@path/to/charts][?[ref=git-ref][&sparse=1][&depupdate=0][&package=0]]
+    git+ssh://[username@]provider.com/<path/to/repo>[@path/to/charts][?[ref=git-ref][&sparse=1][&depupdate=0][&package=0]]
+    git+file://<path/to/repo>[@path/to/charts][?[ref=git-ref][&sparse=1][&depupdate=0][&package=0]]
 
     git+https://github.com/jetstack/cert-manager@deploy/charts?ref=v0.6.2&sparse=0
     git+ssh://git@github.com/jetstack/cert-manager@deploy/charts?ref=v0.6.2&sparse=1
     git+ssh://git@github.com/jetstack/cert-manager@deploy/charts?ref=v0.6.2
     git+https://github.com/istio/istio@install/kubernetes/helm?ref=1.5.4&sparse=0&depupdate=0
     git+https://github.com/bitnami/charts@bitnami/wordpress?ref=master&sparse=0&depupdate=0&package=0
+    git+https://gitlab.com/one-touch-pipeline/weskit/helm-deployment?ref=ee259f65191cef10855438321ce99e37873918b6
 
 Add your repository:
 
@@ -78,7 +79,7 @@ Pulling value files:
 
 **name**|**description**|**default**
 --------|---------------|-----------
-`ref`|Set git ref to a branch or tag. Also works for commits with `sparse=0`.|`master`
+`ref`|Set git ref to a branch or tag. Also works for commits with `sparse=0`.|Discover from remote
 `sparse`|Set git strategy to sparse. Will try to fetch only the needed commits for the target path. If set to `0`, default git strategy will be used.|`1`
 `depupdate`|Run `helm dependency update` on the retrieved chart. If set to `0`, this step is skipped.|`1`
 `package`|Run `helm package` on the retrieved chart. If set to `0`, this step is skipped.|`1`
@@ -103,6 +104,8 @@ You can enable debug output by setting `HELM_GIT_DEBUG` environment variable to 
 
 In order to debug in a more efficient maneer, I advise you use `helm fetch` instead of `helm repo add`.
 
+You can enable more advanced output by setting `HELM_GIT_TRACE` environment variable to `1`.
+
 ## Contributing
 
 Contributions are welcome! Please see [these instructions](.github/CONTRIBUTING.md) that will help you to develop the plugin.
@@ -114,4 +117,4 @@ Contributions are welcome! Please see [these instructions](.github/CONTRIBUTING.
 
 ## License
 
-[MIT](LICENSE)
+[Apache License 2.0](LICENSE)
