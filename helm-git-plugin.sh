@@ -27,7 +27,6 @@ git_output="/dev/null"
 git_quiet="--quiet"
 if [ "${HELM_GIT_DEBUG:-}" = "1" ]; then
   debug=1
-  cleanup=0
 fi
 if [ "${HELM_GIT_TRACE:-}" = "1" ]; then
   trace=1
