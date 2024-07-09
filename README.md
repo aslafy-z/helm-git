@@ -33,9 +33,9 @@ to the plugin, please see [these instructions](.github/CONTRIBUTING.md).
 
 Here's the Git urls format, followed by examples:
 
-    git+https://[provider.com]/[user]/[repo][@path/to/charts][?[ref=git-ref][&sparse=0][&depupdate=0][&package=0]]
-    git+ssh://git@[provider.com]/[user]/[repo][@path/to/charts][?[ref=git-ref][&sparse=0][&depupdate=0][&package=0]]
-    git+file://[path/to/repo][@path/to/charts][?[ref=git-ref][&sparse=0][&depupdate=0][&package=0]]
+    git+https://[username[:password]@]/<path/to/repo>[@path/to/charts][?[ref=git-ref][&sparse=1][&depupdate=0][&package=0]]
+    git+ssh://[username@]provider.com/<path/to/repo>[@path/to/charts][?[ref=git-ref][&sparse=1][&depupdate=0][&package=0]]
+    git+file://<path/to/repo>[@path/to/charts][?[ref=git-ref][&sparse=1][&depupdate=0][&package=0]]
 
     git+https://github.com/jetstack/cert-manager@deploy/charts?ref=v0.6.2&sparse=0
     git+ssh://git@github.com/jetstack/cert-manager@deploy/charts?ref=v0.6.2&sparse=1
