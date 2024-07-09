@@ -11,7 +11,11 @@ jobs:
     name: lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: 'package.json'
 
       - run: npm ci
 
@@ -28,14 +32,29 @@ jobs:
       FIXTURES_GIT_REPO: ${{ format('{0}/{1}', github.server_url, github.event.pull_request.head.repo.full_name || github.repository) }}
       FIXTURES_GIT_REF: ${{ github.head_ref || github.ref_name }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-      - uses: azure/setup-helm@v3.4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: 'package.json'
+
+      - uses: azure/setup-helm@v3.5
         with:
           version: ${{ matrix.helm }}
         id: helm
 
       - run: npm ci
+
+      - name: Replace common utilities by busybox counterparts
+        run: |
+          path="${PWD}/.busybox"
+          mkdir -p $path
+          ln -fs /bin/busybox $path/sh
+          ln -fs /bin/busybox $path/sed
+          ln -fs /bin/busybox $path/grep
+          ln -fs /bin/busybox $path/ls
+          ln -fs /bin/busybox $path/mktemp
+          echo "$path" >> $GITHUB_PATH
 
       - run: npm run test
       - run: npm run test:e2e
@@ -50,9 +69,13 @@ jobs:
     concurrency:
       group: release-${{ github.ref }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           token: ${{ github.token }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: 'package.json'
 
       - run: git fetch --unshallow --tags
 

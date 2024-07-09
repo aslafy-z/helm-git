@@ -9,10 +9,10 @@ load 'test-helper'
     [ $status = 0 ]
     run "$HELM_BIN" plugin install "$HELM_GIT_DIRNAME"
     [ $status = 0 ]
-    run time "$HELM_BIN" fetch -d "$HELM_GIT_OUTPUT" "git+https://github.com/jetstack/cert-manager@contrib/charts/index.yaml?ref=v0.5.2"
+    run "$HELM_BIN" fetch -d "$HELM_GIT_OUTPUT" "git+https://github.com/jetstack/cert-manager@contrib/charts/index.yaml?ref=v0.5.2"
     [ $status = 0 ]
     echo "$output" | grep "First time I see https://github.com/jetstack/cert-manager"
-    run time "$HELM_BIN" fetch -d "$HELM_GIT_OUTPUT" "git+https://github.com/jetstack/cert-manager@contrib/charts/index.yaml?ref=v0.5.2"
+    run "$HELM_BIN" fetch -d "$HELM_GIT_OUTPUT" "git+https://github.com/jetstack/cert-manager@contrib/charts/index.yaml?ref=v0.5.2"
     [ $status = 0 ]
     echo "$output" | grep "https://github.com/jetstack/cert-manager exists in cache"
 }

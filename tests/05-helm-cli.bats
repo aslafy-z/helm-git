@@ -70,13 +70,13 @@ load 'test-helper'
     [ -n "$output" ]
 }
 
-@test "helm_cli repo_add wp-cff9c65 depupdate=0 package=0" {
+@test "helm_cli repo_add wp-781987fa4bb120f52cbd74cd61484bf45bfb5daa depupdate=0 package=0" {
     helm_v2 && skip
     run "$HELM_BIN" plugin install "$HELM_GIT_DIRNAME"
     [ $status = 0 ]
-    run "$HELM_BIN" repo add wp-cff9c65 'git+https://github.com/bitnami/charts@bitnami/wordpress?ref=cff9c65&sparse=0&depupdate=0&package=0'
+    run "$HELM_BIN" repo add wp-781987fa4bb120f52cbd74cd61484bf45bfb5daa 'git+https://github.com/bitnami/charts@bitnami/wordpress?ref=781987fa4bb120f52cbd74cd61484bf45bfb5daa&sparse=0&depupdate=0&package=0'
     [ $status = 0 ]
-    run grep wp-cff9c65 "$HELM_HOME/repository/repositories.yaml"
+    run grep wp-781987fa4bb120f52cbd74cd61484bf45bfb5daa "$HELM_HOME/repository/repositories.yaml"
     [ -n "$output" ]
 }
 
