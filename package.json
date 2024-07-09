@@ -35,6 +35,9 @@
     "semantic-release": "24.0.0",
     "shellcheck": "3.0.0"
   },
+  "engines": {
+    "node": ">=20.8.1"
+  },
   "lint-staged": {
     "**/*": [
       "editorconfig-checker"
