@@ -5,7 +5,7 @@
 set -eu
 
 # Mark this shell
-HELM_GIT_SOURCE=1
+export HELM_GIT_SOURCE=1
 
 bin_name="helm-git"
 readonly bin_name
