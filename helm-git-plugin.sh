@@ -400,7 +400,7 @@ main() {
   # shellcheck disable=SC2317
   cleanup() {
     rm -rf "$git_root_path" "${helm_home_target_path:-}"
-    [ "$cache_charts_enabled" = 0 ] || rm -rf "${helm_target_path:-}"
+    [ "$cache_charts_enabled" = 1 ] || rm -rf "${helm_target_path:-}"
   }
   trap cleanup EXIT
 
