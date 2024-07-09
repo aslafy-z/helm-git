@@ -42,8 +42,16 @@ readonly git_quiet
 export TMPDIR="${TMPDIR:-/tmp}"
 
 # Cache repos or charts depending on the cache path existing in the environment variables
-CACHE_REPOS=$([ -n "${HELM_GIT_REPO_CACHE:-}" ] && echo "true" || echo "false")
-CACHE_CHARTS=$([ -n "${HELM_GIT_CHART_CACHE:-}" ] && echo "true" || echo "false")
+cache_repos_enabled=0
+if [ -n "${HELM_GIT_REPO_CACHE:-}" ]; then
+  cache_repos_enabled=1
+fi
+readonly cache_repos_enabled
+cache_charts_enabled=0
+if [ -n "${HELM_GIT_CHART_CACHE:-}" ]; then
+  cache_charts_enabled=1
+fi
+readonly cache_charts_enabled
 
 ## Tooling
 
@@ -151,7 +159,7 @@ git_checkout() {
   _git_ref=$4
   _git_path=$5
 
-  if $CACHE_REPOS; then
+  if [ "$cache_repos_enabled" = 1 ]; then
     _intercepted_repo=$(git_cache_intercept "${_git_repo}" "${_git_ref}") && _git_repo="${_intercepted_repo}"
   fi
 
@@ -372,7 +380,7 @@ main() {
   readonly helm_repo_uri="git+${git_repo}@${helm_dir}?ref=${git_ref}&sparse=${git_sparse}&depupdate=${helm_depupdate}&package=${helm_package}"
   trace "helm_repo_uri: $helm_repo_uri"
 
-  if ${CACHE_CHARTS}; then
+  if [ "$cache_charts_enabled" = 1 ]; then
     _request_hash=$(echo "${_raw_uri}" | md5sum | cut -d " " -f1)
 
     _cache_folder="${HELM_GIT_CHART_CACHE}/${_request_hash}"
@@ -392,7 +400,7 @@ main() {
   # shellcheck disable=SC2317
   cleanup() {
     rm -rf "$git_root_path" "${helm_home_target_path:-}"
-    ${CACHE_CHARTS} || rm -rf "${helm_target_path:-}"
+    [ "$cache_charts_enabled" = 1 ] || rm -rf "${helm_target_path:-}"
   }
   trap cleanup EXIT
 
@@ -412,7 +420,7 @@ main() {
     return
   fi
 
-  if ${CACHE_CHARTS}; then
+  if [ "$cache_charts_enabled" = 1 ]; then
     helm_target_path="${_cache_folder}"
   else
     helm_target_path="$(mktemp -d "$TMPDIR/helm-git.XXXXXX")"
