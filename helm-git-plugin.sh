@@ -5,7 +5,8 @@
 set -eu
 
 # Mark this shell
-export HELM_GIT_SOURCE=1
+# shellcheck disable=SC2034
+HELM_GIT_SOURCE=1
 
 bin_name="helm-git"
 readonly bin_name
