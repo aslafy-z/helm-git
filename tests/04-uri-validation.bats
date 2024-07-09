@@ -73,3 +73,8 @@ load 'test-helper'
     _run_helm_git "git+https://github.com/hashicorp/vault-helm@/index.yaml?ref=v0.5.0"
     [ $status = 0 ]
 }
+
+@test "should success with empty inline git_file_path" {
+    _run_helm_git "git+https://gitlab.com/one-touch-pipeline/weskit/helm-deployment/index.yaml?ref=ee259f65191cef10855438321ce99e37873918b6"
+    [ $status = 0 ]
+}
