@@ -294,10 +294,13 @@ parse_uri() {
   string_contains "$allowed_protocols" "$_git_scheme" ||
     error "$error_invalid_protocol"
 
-  _git_path=$(echo "${_uri_path}" | cut -d'@' -f 1)
+  _git_path=$(echo "${_uri_path}" | awk -F'@' '{print $1}')
+  _git_file_path=$(echo "${_uri_path}" | awk -F'@' '{print $2}')
+  if [ -z "$_git_file_path" ]; then
+    _git_file_path=$(basename "$_git_path")
+    _git_path=$(dirname "$_git_path")
+  fi
   trace "_git_path: $_git_path"
-
-  _git_file_path=$(echo "${_uri_path}" | cut -d'@' -f 2)
   trace "_git_file_path: $_git_file_path"
 
   helm_dir=$(dirname "${_git_file_path}" | sed -r '/^[\.|/]$/d')
