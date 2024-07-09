@@ -4,18 +4,21 @@
 
 set -eu
 
-readonly bin_name="helm-git"
-readonly allowed_protocols="https http file ssh"
-readonly url_prefix="git+"
-
-readonly error_invalid_prefix="Git url should start with '$url_prefix'. Please check helm-git usage."
-readonly error_invalid_protocol="Protocol not allowed, it should match one of theses: $allowed_protocols."
+bin_name="helm-git"
+readonly bin_name
+allowed_protocols="https http file ssh"
+readonly allowed_protocols
+url_prefix="git+"
+readonly url_prefix
+error_invalid_prefix="Git url should start with '$url_prefix'. Please check helm-git usage."
+readonly error_invalid_prefix
+error_invalid_protocol="Protocol not allowed, it should match one of theses: $allowed_protocols."
+readonly error_invalid_protocol
 
 debug=0
 if [ "${HELM_GIT_DEBUG:-}" = "1" ]; then
   debug=1
 fi
-
 trace=0
 git_output="/dev/null"
 git_quiet="--quiet"
@@ -25,12 +28,18 @@ if [ "${HELM_GIT_TRACE:-}" = "1" ]; then
   git_output="/dev/stderr"
   git_quiet=""
 fi
+readonly trace
+readonly debug
+readonly git_output
+readonly git_quiet
 
 export TMPDIR="${TMPDIR:-/tmp}"
 
 # Cache repos or charts depending on the cache path existing in the environment variables
-CACHE_REPOS=$([ -n "${HELM_GIT_REPO_CACHE:-}" ] && echo "true" || echo "false")
-CACHE_CHARTS=$([ -n "${HELM_GIT_CHART_CACHE:-}" ] && echo "true" || echo "false")
+cache_repos_enabled=$([ -n "${HELM_GIT_REPO_CACHE:-}" ] && echo 1 || echo 0)
+readonly cache_repos_enabled
+cache_charts_enabled=$([ -n "${HELM_GIT_CHART_CACHE:-}" ] && echo 1 || echo 0)
+readonly cache_charts_enabled
 
 ## Tooling
 
@@ -129,7 +138,7 @@ git_checkout() {
   _git_ref=$4
   _git_path=$5
 
-  if $CACHE_REPOS; then
+  if [ $cache_repos_enabled = 1 ]; then
     _intercepted_repo=$(git_cache_intercept "${_git_repo}" "${_git_ref}") && _git_repo="${_intercepted_repo}"
   fi
 
@@ -341,7 +350,7 @@ main() {
   readonly helm_repo_uri="git+${git_repo}@${helm_dir}?ref=${git_ref}&sparse=${git_sparse}&depupdate=${helm_depupdate}&package=${helm_package}"
   trace "helm_repo_uri: $helm_repo_uri"
 
-  if ${CACHE_CHARTS}; then
+  if [ $cache_charts_enabled = 1 ]; then
     _request_hash=$(echo "${_raw_uri}" | md5sum | cut -d " " -f1)
 
     _cache_folder="${HELM_GIT_CHART_CACHE}/${_request_hash}"
@@ -361,7 +370,7 @@ main() {
   # shellcheck disable=SC2317
   cleanup() {
     rm -rf "$git_root_path" "${helm_home_target_path:-}"
-    ${CACHE_CHARTS} || rm -rf "${helm_target_path:-}"
+    [ $cache_charts_enabled = 0 ] || rm -rf "${helm_target_path:-}"
   }
   trap cleanup EXIT
 
@@ -381,7 +390,7 @@ main() {
     return
   fi
 
-  if ${CACHE_CHARTS}; then
+  if [ $cache_charts_enabled = 1 ]; then
     helm_target_path="${_cache_folder}"
   else
     helm_target_path="$(mktemp -d "$TMPDIR/helm-git.XXXXXX")"
