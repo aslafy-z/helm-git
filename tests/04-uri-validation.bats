@@ -30,13 +30,13 @@ load 'test-helper'
 @test "should fail and warning with bad path and no ref" {
     _run_helm_git "git+https://github.com/jetstack/cert-manager@contrib/charts/cert-manager/index.yaml?ref="
     [ $status = 1 ]
-    [ -n "$(echo $output | grep "git_ref is empty")" ]
+    [ -n "$(echo $output | grep "git_ref was not given")" ]
 }
 
 @test "should success and warning with no ref" {
     _run_helm_git "git+https://github.com/jetstack/cert-manager@deploy/charts/index.yaml"
     [ $status = 0 ]
-    [ -n "$(echo $output | grep "git_ref is empty")" ]
+    [ -n "$(echo $output | grep "git_ref was not given")" ]
 }
 
 @test "should success with username" {

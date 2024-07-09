@@ -11,7 +11,7 @@ jobs:
     name: lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - run: npm ci
 
@@ -28,9 +28,9 @@ jobs:
       FIXTURES_GIT_REPO: ${{ format('{0}/{1}', github.server_url, github.event.pull_request.head.repo.full_name || github.repository) }}
       FIXTURES_GIT_REF: ${{ github.head_ref || github.ref_name }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-      - uses: azure/setup-helm@v3.4
+      - uses: azure/setup-helm@v3.5
         with:
           version: ${{ matrix.helm }}
         id: helm
@@ -61,7 +61,7 @@ jobs:
     concurrency:
       group: release-${{ github.ref }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           token: ${{ github.token }}
 
