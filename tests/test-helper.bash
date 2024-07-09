@@ -4,7 +4,7 @@ export HELM_GIT_DEBUG=1
 export HELM_GIT_DIRNAME="$BATS_TEST_DIRNAME/.."
 
 # shellcheck source=helm-git-plugin.sh
-if [ -n "$HELM_GIT_SOURCE" ]; then
+if [ -z "$HELM_GIT_SOURCE" ]; then
   source "$HELM_GIT_DIRNAME/helm-git-plugin.sh"
 fi
 
