@@ -3,7 +3,7 @@ version: "0.17.0"
 description: |-
   Get non-packaged Charts directly from Git.
 downloaders:
-- command: "$HELM_PLUGIN_DIR/helm-git"
+- command: "/usr/bin/env sh helm-git"
   protocols:
     - "git+file"
     - "git+ssh"
