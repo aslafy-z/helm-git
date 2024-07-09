@@ -330,7 +330,7 @@ parse_uri() {
   readonly git_ref
   trace "git_ref: $git_ref"
 
-  git_sparse=$(echo "$_raw_uri" | sed '/^.*sparse=\([^&#]*\).*$/!d;s//\1/')
+  git_sparse=$(echo "$_uri_query" | sed '/^.*sparse=\([^&#]*\).*$/!d;s//\1/')
   [ -z "$git_sparse" ] && git_sparse=0
   readonly git_sparse
   trace "git_sparse: $git_sparse"
