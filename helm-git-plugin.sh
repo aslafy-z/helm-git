@@ -4,6 +4,10 @@
 
 set -eu
 
+# Mark this shell
+# shellcheck disable=SC2034
+HELM_GIT_SOURCE=1
+
 bin_name="helm-git"
 readonly bin_name
 allowed_protocols="https http file ssh"
