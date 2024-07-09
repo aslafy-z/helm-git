@@ -114,4 +114,4 @@ Contributions are welcome! Please see [these instructions](.github/CONTRIBUTING.
 
 ## License
 
-[MIT](LICENSE)
+[Apache License 2.0](LICENSE)
