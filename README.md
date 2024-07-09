@@ -104,6 +104,8 @@ You can enable debug output by setting `HELM_GIT_DEBUG` environment variable to 
 
 In order to debug in a more efficient maneer, I advise you use `helm fetch` instead of `helm repo add`.
 
+You can enable more advanced output by setting `HELM_GIT_TRACE` environment variable to `1`.
+
 ## Contributing
 
 Contributions are welcome! Please see [these instructions](.github/CONTRIBUTING.md) that will help you to develop the plugin.
