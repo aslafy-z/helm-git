@@ -20,21 +20,25 @@ error_invalid_protocol="Protocol not allowed, it should match one of theses: $al
 readonly error_invalid_protocol
 
 # Debug & trace output configuration
+cleanup=1
 debug=0
-if [ "${HELM_GIT_DEBUG:-}" = "1" ]; then
-  debug=1
-fi
 trace=0
 git_output="/dev/null"
 git_quiet="--quiet"
+if [ "${HELM_GIT_DEBUG:-}" = "1" ]; then
+  debug=1
+  cleanup=0
+fi
 if [ "${HELM_GIT_TRACE:-}" = "1" ]; then
   trace=1
   debug=1
+  cleanup=0
   git_output="/dev/stderr"
   git_quiet=""
 fi
-readonly trace
+readonly cleanup
 readonly debug
+readonly trace
 readonly git_output
 readonly git_quiet
 
@@ -388,13 +392,14 @@ main() {
     fi
   fi
 
-  # Setup cleanup trap
+  # Setup exit trap
   # shellcheck disable=SC2317
-  cleanup() {
+  exit_trap() {
+    [ $cleanup = 1 ] || return 0
     rm -rf "$git_root_path" "${helm_home_target_path:-}"
     ${CACHE_CHARTS} || rm -rf "${helm_target_path:-}"
   }
-  trap cleanup EXIT
+  trap exit_trap EXIT
 
   git_root_path="$(mktemp -d "$TMPDIR/helm-git.XXXXXX")"
   readonly git_root_path="$git_root_path"
