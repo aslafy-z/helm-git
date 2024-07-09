@@ -395,7 +395,7 @@ main() {
   # Setup exit trap
   # shellcheck disable=SC2317
   exit_trap() {
-    [ $cleanup = 1 ] || return 0
+    [ "$cleanup" = 1 ] || return 0
     rm -rf "$git_root_path" "${helm_home_target_path:-}"
     ${CACHE_CHARTS} || rm -rf "${helm_target_path:-}"
   }
