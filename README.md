@@ -18,7 +18,7 @@ This fits multiple use cases:
 
 Use `helm` CLI to install this plugin:
 
-    helm plugin install https://github.com/aslafy-z/helm-git --version 0.17.0
+    helm plugin install https://github.com/aslafy-z/helm-git --version 1.0.0
 
 To use the plugin, you only need `git`. If you want to build the plugin from source, or you want to contribute
 to the plugin, please see [these instructions](.github/CONTRIBUTING.md).
@@ -78,7 +78,7 @@ Pulling value files:
 
 **name**|**description**|**default**
 --------|---------------|-----------
-`ref`|Set git ref to a branch or tag. Also works for commits with `sparse=0`.|`master`
+`ref`|Set git ref to a branch or tag. Also works for commits with `sparse=0`.|Discover from remote
 `sparse`|Set git strategy to sparse. Will try to fetch only the needed commits for the target path. If set to `0`, default git strategy will be used.|`1`
 `depupdate`|Run `helm dependency update` on the retrieved chart. If set to `0`, this step is skipped.|`1`
 `package`|Run `helm package` on the retrieved chart. If set to `0`, this step is skipped.|`1`
