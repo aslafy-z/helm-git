@@ -70,8 +70,8 @@ Pulling value files:
 **name**|**description**|**default**
 --------|---------------|-----------
 `HELM_GIT_HELM_BIN`|Path to the `helm` binary. If not set, `$HELM_BIN` will be used.|`helm`
-`HELM_GIT_DEBUG`|Setting this value to `1` increases `helm-git` log level. |`0`
-`HELM_GIT_TRACE`|Setting this value to `1` increases `helm-git` log level to the maximum. |`0`
+`HELM_GIT_DEBUG`|Setting this value to `1` keeps temporary dirs at shutdown and increases `helm-git` log level. |`0`
+`HELM_GIT_TRACE`|Setting this value to `1` keeps temporary dirs at shutdown and increases `helm-git` log level to the maximum. |`0`
 `HELM_GIT_REPO_CACHE`|Path to use as a Git repository cache to avoid fetching repos more than once. If empty, caching of Git repositories is disabled.|`""`
 `HELM_GIT_CHART_CACHE`|Path to use as a Helm chart cache to avoid re-packaging/re-indexing charts. If empty, caching of Helm charts is disabled.|`""`
 
