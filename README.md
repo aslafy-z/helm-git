@@ -78,7 +78,7 @@ Pulling value files:
 
 **name**|**description**|**default**
 --------|---------------|-----------
-`ref`|Set git ref to a branch or tag. Also works for commits with `sparse=0`.|`master`
+`ref`|Set git ref to a branch or tag. Also works for commits with `sparse=0`.|Discover from remote
 `sparse`|Set git strategy to sparse. Will try to fetch only the needed commits for the target path. If set to `0`, default git strategy will be used.|`1`
 `depupdate`|Run `helm dependency update` on the retrieved chart. If set to `0`, this step is skipped.|`1`
 `package`|Run `helm package` on the retrieved chart. If set to `0`, this step is skipped.|`1`
