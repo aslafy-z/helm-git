@@ -38,7 +38,7 @@ jobs:
         with:
           node-version-file: 'package.json'
 
-      - uses: azure/setup-helm@v3.5
+      - uses: azure/setup-helm@v4
         with:
           version: ${{ matrix.helm }}
         id: helm
