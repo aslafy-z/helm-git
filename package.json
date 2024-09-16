@@ -30,7 +30,7 @@
     "bats": "1.11.0",
     "conventional-changelog-conventionalcommits": "8.0.0",
     "editorconfig-checker": "5.1.8",
-    "husky": "9.1.5",
+    "husky": "9.1.6",
     "lint-staged": "15.2.10",
     "semantic-release": "24.1.0",
     "shellcheck": "3.0.0"
