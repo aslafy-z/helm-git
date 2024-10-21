@@ -36,7 +36,7 @@
     "shellcheck": "3.0.0"
   },
   "engines": {
-    "node": ">=20.8.1"
+    "node": ">=20.11.0"
   },
   "lint-staged": {
     "**/*": [
