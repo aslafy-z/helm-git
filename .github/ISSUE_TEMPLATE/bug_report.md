@@ -16,6 +16,7 @@ labels: 'bug'
 Helm version:  
 `helm-git` version:  
 Git version:  
+OS: 
 
 ## Steps To Reproduce
 
