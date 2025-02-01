@@ -53,8 +53,12 @@ readonly cache_repos_enabled
 cache_charts_enabled=0
 if [ -n "${HELM_GIT_CHART_CACHE:-}" ]; then
   cache_charts_enabled=1
+  cache_charts_strategy="${HELM_GIT_CHART_CACHE_STRATEGY:-}"
+else
+  cache_charts_strategy=""
 fi
 readonly cache_charts_enabled
+readonly cache_charts_strategy
 
 ## Tooling
 
@@ -322,6 +326,10 @@ parse_uri() {
   readonly helm_file
   trace "helm_file: $helm_file"
 
+  helm_chart_name=$(echo "$helm_file" | sed -r 's/-[^-]+.tgz$//')
+  readonly helm_chart_name
+  trace "helm_chart_name: $helm_chart_name"
+
   git_repo="${_git_scheme}://${_uri_authority}/${_git_path}"
   readonly git_repo
   trace "git_repo: $git_repo"
@@ -384,7 +392,11 @@ main() {
   trace "helm_repo_uri: $helm_repo_uri"
 
   if [ "$cache_charts_enabled" = 1 ]; then
-    _request_hash=$(echo "${_raw_uri}" | md5sum | cut -d " " -f1)
+    if [ "$cache_charts_strategy" = "repo" ]; then
+      _request_hash=$(echo "${helm_repo_uri}" | md5sum | cut -d " " -f1)
+    else
+      _request_hash=$(echo "${_raw_uri}" | md5sum | cut -d " " -f1)
+    fi
 
     _cache_folder="${HELM_GIT_CHART_CACHE}/${_request_hash}"
 
@@ -452,7 +464,12 @@ main() {
 
   chart_search_root="$git_sub_path"
 
-  chart_search=$(find "$chart_search_root" -maxdepth 2 -name "Chart.yaml" -print)
+  if [ "$helm_chart_name" != "index.yaml" ] && [ "$cache_charts_enabled" = "1" ] && [ "$cache_charts_strategy" = "chart" ]; then
+    chart_search=$(find "$chart_search_root" -maxdepth 2 -name "Chart.yaml" -exec grep -l "name:\s$helm_chart_name" {} +)
+  else
+    chart_search=$(find "$chart_search_root" -maxdepth 2 -name "Chart.yaml" -print)
+  fi
+
   chart_search_count=$(echo "$chart_search" | wc -l)
 
   echo "$chart_search" | {

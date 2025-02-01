@@ -74,6 +74,7 @@ Pulling value files:
 `HELM_GIT_TRACE`|Setting this value to `1` increases `helm-git` log level to the maximum and keeps temporary dirs at shutdown. |`0`
 `HELM_GIT_REPO_CACHE`|Path to use as a Git repository cache to avoid fetching repos more than once. If empty, caching of Git repositories is disabled.|`""`
 `HELM_GIT_CHART_CACHE`|Path to use as a Helm chart cache to avoid re-packaging/re-indexing charts. If empty, caching of Helm charts is disabled.|`""`
+`HELM_GIT_CHART_CACHE_STRATEGY`|Strategy to use when caching charts. If `repo` then all charts from the same repo will use the same cache. If `chart`, caching will only build single chart for each chart if `package` is `1`. Any other values preserves the default behavior: each chart has its own cache and all packages are built every time if `package` is `1`.|`""`
 
 ### Arguments
 
