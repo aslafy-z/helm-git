@@ -72,19 +72,19 @@ load 'test-helper'
     [ $status = 0 ]
     run "$HELM_BIN" plugin install "$HELM_GIT_DIRNAME"
     [ $status = 0 ]
-    run "$HELM_BIN" fetch -d "$HELM_GIT_OUTPUT" "git+https://github.com/istio/istio@manifests/charts/gateway-1.0.0.tgz?ref=1.24.2"
+    run "$HELM_BIN" fetch -d "$HELM_GIT_OUTPUT" "git+https://github.com/istio/istio@install/kubernetes/helm/istio-1.1.0.tgz?ref=1.1.0"
     [ $status = 0 ]
     echo "$output" | grep "Helm request not found in cache"
-    run stat "$HELM_GIT_OUTPUT/gateway-1.0.0.tgz"
+    run stat "$HELM_GIT_OUTPUT/istio-1.1.0.tgz"
     [ $status = 0 ]
     run bats_pipe ls -1 "$HELM_GIT_CHART_CACHE"/*/* \| grep -v index.yaml \| wc -l \| awk '{print $1}'
     [ "$output" -gt "1" ]
     run rm -rf "$HELM_GIT_CHART_CACHE"/*/*
     set_chart_cache_strategy "chart"
-    run "$HELM_BIN" fetch -d "$HELM_GIT_OUTPUT" "git+https://github.com/istio/istio@manifests/charts/gateway-1.0.0.tgz?ref=1.24.2"
+    run "$HELM_BIN" fetch -d "$HELM_GIT_OUTPUT" "git+https://github.com/istio/istio@install/kubernetes/helm/istio-1.1.0.tgz?ref=1.1.0"
     [ $status = 0 ]
     echo "$output" | grep "Helm request not found in cache"
-    run stat "$HELM_GIT_OUTPUT/gateway-1.0.0.tgz"
+    run stat "$HELM_GIT_OUTPUT/istio-1.1.0.tgz"
     [ $status = 0 ]
     run bats_pipe ls -1 "$HELM_GIT_CHART_CACHE"/*/* \| grep -v index.yaml \| wc -l \| awk '{print $1}'
     [ "$output" = "1" ]

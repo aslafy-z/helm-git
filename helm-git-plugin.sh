@@ -465,7 +465,7 @@ main() {
   chart_search_root="$git_sub_path"
 
   if [ "$helm_chart_name" != "index.yaml" ] && [ "$cache_charts_enabled" = "1" ] && [ "$cache_charts_strategy" = "chart" ]; then
-    chart_search=$(find "$chart_search_root" -maxdepth 2 -name "Chart.yaml" -exec grep -l "name:\s$helm_chart_name" {} +)
+    chart_search=$(find "$chart_search_root" -maxdepth 2 -name "Chart.yaml" -exec grep -lE "name:\s*('|\")?${helm_chart_name}('|\")?(\s+|$)" {} +)
   else
     chart_search=$(find "$chart_search_root" -maxdepth 2 -name "Chart.yaml" -print)
   fi
