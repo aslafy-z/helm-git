@@ -32,7 +32,7 @@
     "editorconfig-checker": "5.1.8",
     "husky": "9.1.7",
     "lint-staged": "15.2.10",
-    "semantic-release": "24.2.0",
+    "semantic-release": "24.2.2",
     "shellcheck": "3.0.0"
   },
   "engines": {
