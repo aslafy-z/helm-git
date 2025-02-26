@@ -50,3 +50,7 @@ enable_repo_cache() {
     HELM_GIT_REPO_CACHE=$(mktemp -d "$BATS_TMPDIR/helm-git.repo-cache.XXXXXX")
     export HELM_GIT_REPO_CACHE
 }
+set_chart_cache_strategy() {
+    HELM_GIT_CHART_CACHE_STRATEGY="$1"
+    export HELM_GIT_CHART_CACHE_STRATEGY
+}
