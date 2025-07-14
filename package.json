@@ -28,7 +28,7 @@
     "@semantic-release/exec": "7.1.0",
     "@semantic-release/git": "10.0.1",
     "bats": "1.12.0",
-    "conventional-changelog-conventionalcommits": "9.0.0",
+    "conventional-changelog-conventionalcommits": "9.1.0",
     "editorconfig-checker": "6.0.1",
     "husky": "9.1.7",
     "lint-staged": "15.4.3",
