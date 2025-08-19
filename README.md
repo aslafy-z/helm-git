@@ -102,6 +102,8 @@ As this plugin uses `git` CLI to clone repos. You can configure private access i
 
 #### Helm Credentials Support
 
+> **Note:** This feature requires Helm v3.14.0 or later.
+
 This plugin supports Helm's built-in credential passing mechanism. When you use `helm repo add` with `--username` and `--password` flags, the plugin automatically configures git to use these credentials:
 
 ```bash
