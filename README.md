@@ -54,12 +54,19 @@ You can use it as any other Helm chart repository. Try:
     NAME                                    CHART VERSION   APP VERSION     DESCRIPTION
     cert-manager/cert-manager               v0.6.6          v0.6.2          A Helm chart for cert-manager
 
-    $ helm install cert-manager/cert-manager --version "0.6.6"
+    $ helm install cert-manager/cert-manager --version 0.6.6
 
 Fetching also works:
 
-    helm fetch cert-manager/cert-manager --version "0.6.6"
-    helm fetch git+https://github.com/jetstack/cert-manager@deploy/charts/cert-manager-v0.6.2.tgz?ref=v0.6.2
+    helm fetch cert-manager/cert-manager --version 0.6.6
+    helm fetch 'git+https://github.com/jetstack/cert-manager@deploy/charts/cert-manager-v0.6.6.tgz?ref=v0.6.2'
+
+Showing chart information:
+
+    helm show chart cert-manager/cert-manager
+    helm show values cert-manager/cert-manager
+    helm show chart 'git+https://github.com/jetstack/cert-manager@deploy/charts/cert-manager-v0.6.6.tgz?ref=v0.6.2'
+    helm show values 'git+https://github.com/jetstack/cert-manager@deploy/charts/cert-manager-v0.6.6.tgz?ref=v0.6.2'
 
 Pulling value files:
 
