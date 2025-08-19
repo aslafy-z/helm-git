@@ -61,6 +61,13 @@ Fetching also works:
     helm fetch cert-manager/cert-manager --version "0.6.6"
     helm fetch git+https://github.com/jetstack/cert-manager@deploy/charts/cert-manager-v0.6.2.tgz?ref=v0.6.2
 
+Showing chart information:
+
+    helm show chart cert-manager/cert-manager
+    helm show values cert-manager/cert-manager
+    helm show chart 'git+https://github.com/jetstack/cert-manager@deploy/charts/cert-manager-v0.6.6.tgz?ref=v0.6.2'
+    helm show values 'git+https://github.com/jetstack/cert-manager@deploy/charts/cert-manager-v0.6.6.tgz?ref=v0.6.2'
+
 Pulling value files:
 
     helm install . -f git+https://github.com/aslafy-z/helm-git@tests/fixtures/example-chart/values.yaml
