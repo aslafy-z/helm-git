@@ -120,12 +120,12 @@ git_fetch_ref() {
 setup_git_credentials() {
   if [ -n "${HELM_PLUGIN_USERNAME:-}" ] && [ -n "${HELM_PLUGIN_PASSWORD:-}" ]; then
     debug "Setting up git credentials using Helm-provided username and password"
-    
+
     # Export credentials as environment variables for the credential helper
     export GIT_USER="${HELM_PLUGIN_USERNAME}"
     export GIT_PASSWORD="${HELM_PLUGIN_PASSWORD}"
     export HELM_GIT_USE_CREDENTIALS="1"
-    
+
     trace "Git credential helper configured with username: ${HELM_PLUGIN_USERNAME}"
   else
     trace "No Helm plugin credentials found, using existing git authentication"
@@ -438,7 +438,7 @@ main() {
   fi
 
   # Setup exit trap
-  # shellcheck disable=SC2317,SC2329 
+  # shellcheck disable=SC2317,SC2329
   exit_trap() {
     [ "$cleanup" = 1 ] || return 0
     rm -rf "$git_root_path" "${helm_home_target_path:-}"

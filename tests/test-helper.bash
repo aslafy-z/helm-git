@@ -54,3 +54,37 @@ set_chart_cache_strategy() {
     HELM_GIT_CHART_CACHE_STRATEGY="$1"
     export HELM_GIT_CHART_CACHE_STRATEGY
 }
+
+# Check if Helm version supports credential passing (>= 3.14.0)
+helm_supports_credentials() {
+    local helm_version
+    helm_version=$($HELM_BIN version --short 2>/dev/null | head -1 | sed 's/v//' | cut -d'+' -f1 | cut -d'-' -f1)
+
+    # If we can't get version, assume it doesn't support credentials
+    [ -n "$helm_version" ] || return 1
+
+    # Extract major.minor.patch using parameter expansion
+    local major="${helm_version%%.*}"
+    local rest="${helm_version#*.}"
+    local minor="${rest%%.*}"
+    local patch="${rest#*.}"
+
+    # If patch is the same as rest, there was no second dot, so patch is 0
+    [ "$patch" = "$rest" ] && patch=0
+
+    # Ensure we have numeric values (basic check)
+    case "$major" in ''|*[!0-9]*) return 1 ;; esac
+    case "$minor" in ''|*[!0-9]*) return 1 ;; esac
+    case "$patch" in ''|*[!0-9]*) patch=0 ;; esac
+
+    # Check if version >= 3.14.0
+    if [ "$major" -gt 3 ]; then
+        return 0
+    elif [ "$major" -eq 3 ] && [ "$minor" -gt 14 ]; then
+        return 0
+    elif [ "$major" -eq 3 ] && [ "$minor" -eq 14 ] && [ "$patch" -ge 0 ]; then
+        return 0
+    else
+        return 1
+    fi
+}
