@@ -48,32 +48,22 @@ export TMPDIR="${TMPDIR:-/tmp}"
 cache_repos_enabled=0
 if [ -n "${HELM_GIT_REPO_CACHE:-}" ]; then
   cache_repos_enabled=1
-  # Expand tilde to home directory and create cache directory if it doesn't exist
-  case "${HELM_GIT_REPO_CACHE}" in
-    "~/"*) HELM_GIT_REPO_CACHE="${HOME}/${HELM_GIT_REPO_CACHE#*/}" ;;
-    "~") HELM_GIT_REPO_CACHE="${HOME}" ;;
-  esac
+  # Create cache directory if it doesn't exist
   mkdir -p "${HELM_GIT_REPO_CACHE}" || {
     echo "Error in plugin '$bin_name': Failed to create repo cache directory: ${HELM_GIT_REPO_CACHE}" >&2
     exit 1
   }
-  export HELM_GIT_REPO_CACHE
 fi
 readonly cache_repos_enabled
 cache_charts_enabled=0
 if [ -n "${HELM_GIT_CHART_CACHE:-}" ]; then
   cache_charts_enabled=1
   cache_charts_strategy="${HELM_GIT_CHART_CACHE_STRATEGY:-}"
-  # Expand tilde to home directory and create cache directory if it doesn't exist
-  case "${HELM_GIT_CHART_CACHE}" in
-    "~/"*) HELM_GIT_CHART_CACHE="${HOME}/${HELM_GIT_CHART_CACHE#*/}" ;;
-    "~") HELM_GIT_CHART_CACHE="${HOME}" ;;
-  esac
+  # Create cache directory if it doesn't exist
   mkdir -p "${HELM_GIT_CHART_CACHE}" || {
     echo "Error in plugin '$bin_name': Failed to create chart cache directory: ${HELM_GIT_CHART_CACHE}" >&2
     exit 1
   }
-  export HELM_GIT_CHART_CACHE
 else
   cache_charts_strategy=""
 fi
@@ -428,7 +418,7 @@ main() {
   fi
 
   # Setup exit trap
-  # shellcheck disable=SC2317,SC2329 
+  # shellcheck disable=SC2317,SC2329
   exit_trap() {
     [ "$cleanup" = 1 ] || return 0
     rm -rf "$git_root_path" "${helm_home_target_path:-}"
