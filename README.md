@@ -59,7 +59,7 @@ You can use it as any other Helm chart repository. Try:
 Fetching also works:
 
     helm fetch cert-manager/cert-manager --version "0.6.6"
-    helm fetch git+https://github.com/jetstack/cert-manager@deploy/charts/cert-manager-v0.6.2.tgz?ref=v0.6.2
+    helm fetch 'git+https://github.com/jetstack/cert-manager@deploy/charts/cert-manager-v0.6.6.tgz?ref=v0.6.2'
 
 Showing chart information:
 
