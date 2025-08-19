@@ -136,7 +136,7 @@ setup_git_credentials() {
 # Execute git command with credential helper if credentials are available
 git_cmd() {
   if [ "${HELM_GIT_USE_CREDENTIALS:-}" = "1" ]; then
-    git -c credential.helper="!f() { echo \"username=${GIT_USER}\"; echo \"password=${GIT_PASSWORD}\"; }; f" "$@"
+    git -c credential.helper='!f() { echo "username=${GIT_USER}"; echo "password=${GIT_PASSWORD}"; }; f' "$@"
   else
     git "$@"
   fi
