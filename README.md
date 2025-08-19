@@ -98,6 +98,23 @@ As this plugin uses `git` CLI to clone repos. You can configure private access i
 
 - **using ssh**: Start a [ssh-agent daemon](https://help.github.com/articles/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent/#adding-your-ssh-key-to-the-ssh-agent)
 - **using https**: Use a [credentials helper](https://git-scm.com/docs/gitcredentials)
+- **using helm credentials**: Use `helm repo add --username user --password pass` to provide credentials
+
+#### Helm Credentials Support
+
+This plugin supports Helm's built-in credential passing mechanism. When you use `helm repo add` with `--username` and `--password` flags, the plugin automatically configures git to use these credentials:
+
+```bash
+# Add a repository with credentials
+helm repo add my-repo --username myuser --password mypass git+https://github.com/company/charts@charts?ref=main
+
+# The credentials are automatically used for git operations
+helm fetch my-repo/my-chart
+```
+
+This feature works with ArgoCD and other tools that pass credentials to Helm repositories using the standard `--username` and `--password` flags.
+
+**Note**: When both Helm credentials and existing git authentication (SSH keys, credential helpers) are available, Helm credentials take precedence for the current operation.
 
 ### Note on SSH relative paths
 
