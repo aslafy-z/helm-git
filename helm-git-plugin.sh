@@ -53,7 +53,10 @@ if [ -n "${HELM_GIT_REPO_CACHE:-}" ]; then
     "~/"*) HELM_GIT_REPO_CACHE="${HOME}/${HELM_GIT_REPO_CACHE#*/}" ;;
     "~") HELM_GIT_REPO_CACHE="${HOME}" ;;
   esac
-  mkdir -p "${HELM_GIT_REPO_CACHE}" || error "Failed to create repo cache directory: ${HELM_GIT_REPO_CACHE}"
+  mkdir -p "${HELM_GIT_REPO_CACHE}" || {
+    echo "Error in plugin '$bin_name': Failed to create repo cache directory: ${HELM_GIT_REPO_CACHE}" >&2
+    exit 1
+  }
   export HELM_GIT_REPO_CACHE
 fi
 readonly cache_repos_enabled
@@ -66,7 +69,10 @@ if [ -n "${HELM_GIT_CHART_CACHE:-}" ]; then
     "~/"*) HELM_GIT_CHART_CACHE="${HOME}/${HELM_GIT_CHART_CACHE#*/}" ;;
     "~") HELM_GIT_CHART_CACHE="${HOME}" ;;
   esac
-  mkdir -p "${HELM_GIT_CHART_CACHE}" || error "Failed to create chart cache directory: ${HELM_GIT_CHART_CACHE}"
+  mkdir -p "${HELM_GIT_CHART_CACHE}" || {
+    echo "Error in plugin '$bin_name': Failed to create chart cache directory: ${HELM_GIT_CHART_CACHE}" >&2
+    exit 1
+  }
   export HELM_GIT_CHART_CACHE
 else
   cache_charts_strategy=""
