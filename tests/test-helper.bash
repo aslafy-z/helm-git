@@ -59,8 +59,9 @@ set_chart_cache_strategy() {
 helm_supports_credentials() {
     v=$($HELM_BIN version --short 2>/dev/null | sed 's/^v//' | cut -d+ -f1 | cut -d- -f1)
     [ -n "$v" ] || return 1
+    # shellcheck disable=SC2046
     set -- $(echo "$v" | awk -F. '{print $1,$2,($3?$3:0)}')
     [ "$1" -gt 3 ] ||
-    [ "$1" -eq 3 -a "$2" -gt 14 ] ||
-    [ "$1" -eq 3 -a "$2" -eq 14 -a "$3" -ge 0 ]
+    { [ "$1" -eq 3 ] && [ "$2" -gt 14 ]; } ||
+    { [ "$1" -eq 3 ] && [ "$2" -eq 14 ] && [ "$3" -ge 0 ]; }
 }
