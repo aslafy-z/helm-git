@@ -390,9 +390,6 @@ main() {
   helm_args="" # "$1 $2 $3"
   _raw_uri=$4  # eg: git+https://git.com/user/repo@path/to/charts/index.yaml?ref=master
 
-  # Setup git credentials if provided by Helm
-  setup_git_credentials
-
   # If defined, use $HELM_GIT_HELM_BIN as $HELM_BIN.
   if [ -n "${HELM_GIT_HELM_BIN:-}" ]; then
     export HELM_BIN="${HELM_GIT_HELM_BIN}"
