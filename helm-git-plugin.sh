@@ -44,6 +44,12 @@ readonly git_quiet
 # Set default value for TMPDIR
 export TMPDIR="${TMPDIR:-/tmp}"
 
+# Initialize git credential variables
+git_username="${HELM_PLUGIN_USERNAME:-}"
+git_password="${HELM_PLUGIN_PASSWORD:-}"
+unset HELM_PLUGIN_USERNAME
+unset HELM_PLUGIN_PASSWORD
+
 # Cache repos or charts depending on the cache path existing in the environment variables
 cache_repos_enabled=0
 if [ -n "${HELM_GIT_REPO_CACHE:-}" ]; then
@@ -94,7 +100,7 @@ warning() {
 git_try() {
   _git_repo=$1
 
-  GIT_TERMINAL_PROMPT=0 git ls-remote "$_git_repo" --refs >"${git_output}" 2>&1 || return 1
+  GIT_TERMINAL_PROMPT=0 git_cmd ls-remote "$_git_repo" --refs >"${git_output}" 2>&1 || return 1
 }
 
 #git_get_default_branch(git_repo_path)
@@ -102,7 +108,7 @@ git_get_default_branch() {
   _git_repo="${1?Missing git_repo as first parameter}"
 
   # Fetch default branch from remote
-  _git_symref=$(GIT_TERMINAL_PROMPT=0  git ls-remote --symref "${_git_repo}" origin HEAD 2>"${git_output}") || return
+  _git_symref=$(GIT_TERMINAL_PROMPT=0 git_cmd ls-remote --symref "${_git_repo}" origin HEAD 2>"${git_output}") || return
   echo "$_git_symref" | awk '/^ref:/ {sub(/refs\/heads\//, "", $2); print $2}' || return
 }
 
@@ -112,7 +118,24 @@ git_fetch_ref() {
   _git_ref="${2?Mising git_ref as second parameter}"
 
   # Fetches any kind of ref to its right place, tags, annotated tags, branches and commit refs
-  GIT_DIR="${_git_repo_path}" git fetch -u --depth=1 origin "refs/*/${_git_ref}:refs/*/${_git_ref}" "${_git_ref}" >"${git_output}" 2>&1
+  GIT_DIR="${_git_repo_path}" git_cmd fetch -u --depth=1 origin "refs/*/${_git_ref}:refs/*/${_git_ref}" "${_git_ref}" >"${git_output}" 2>&1
+}
+
+# git_cmd(git_arguments...)
+# Execute git command with credential helper if credentials are available
+git_cmd() {
+  _ret=0
+  if [ -n "${git_username:-}" ]; then
+    trace "Git credential helper configured with username: ${git_username}"
+    # shellcheck disable=SC2016
+    GIT_USERNAME="${git_username}" GIT_PASSWORD="${git_password}" git -c credential.helper='!f() { echo "username=${GIT_USERNAME}"; echo "password=${GIT_PASSWORD}"; }; f' "$@"
+    _ret=$?
+  else
+    trace "No Helm plugin credentials found, using existing git authentication"
+    git "$@"
+    _ret=$?
+  fi
+  return $_ret
 }
 
 #git_cache_intercept(git_repo, git_ref)
@@ -133,7 +156,7 @@ git_cache_intercept() {
       mkdir -p "${repo_path}" &&
         cd "${repo_path}" &&
         git init --bare ${git_quiet} >"${git_output}" 2>&1 &&
-        git remote add origin "${_git_repo}" >"${git_output}" 2>&1
+        git_cmd remote add origin "${_git_repo}" >"${git_output}" 2>&1
     } >&2 || debug "Could not setup ${_git_repo}" && return 1
   else
     debug "${_git_repo} exists in cache"
@@ -170,7 +193,7 @@ git_checkout() {
     cd "$_target_path"
     git init ${git_quiet} >"${git_output}" 2>&1
     git config pull.ff only >"${git_output}" 2>&1
-    git remote add origin "$_git_repo" >"${git_output}" 2>&1
+    git_cmd remote add origin "$_git_repo" >"${git_output}" 2>&1
   }
   if [ "$_sparse" = "1" ] && [ -n "$_git_path" ]; then
     git config core.sparseCheckout true >"${git_output}" 2>&1
@@ -408,7 +431,7 @@ main() {
   fi
 
   # Setup exit trap
-  # shellcheck disable=SC2317,SC2329 
+  # shellcheck disable=SC2317,SC2329
   exit_trap() {
     [ "$cleanup" = 1 ] || return 0
     rm -rf "$git_root_path" "${helm_home_target_path:-}"
