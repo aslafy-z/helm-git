@@ -44,6 +44,11 @@ readonly git_quiet
 # Set default value for TMPDIR
 export TMPDIR="${TMPDIR:-/tmp}"
 
+# Initialize credential variables at global scope
+# These will be set by setup_git_credentials() if credentials are provided
+HELM_GIT_USERNAME=""
+HELM_GIT_PASSWORD=""
+
 # Cache repos or charts depending on the cache path existing in the environment variables
 cache_repos_enabled=0
 if [ -n "${HELM_GIT_REPO_CACHE:-}" ]; then
