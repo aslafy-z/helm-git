@@ -121,11 +121,9 @@ setup_git_credentials() {
   if [ -n "${HELM_PLUGIN_USERNAME:-}" ] && [ -n "${HELM_PLUGIN_PASSWORD:-}" ]; then
     debug "Setting up git credentials using Helm-provided username and password"
 
-    # Store credentials in local variables before unsetting environment variables
+    # Store credentials in local variables (not exported) before unsetting environment variables
     HELM_GIT_USERNAME="${HELM_PLUGIN_USERNAME}"
     HELM_GIT_PASSWORD="${HELM_PLUGIN_PASSWORD}"
-    export HELM_GIT_USERNAME
-    export HELM_GIT_PASSWORD
 
     # Unset the original environment variables to prevent them from being passed to child processes
     unset HELM_PLUGIN_USERNAME

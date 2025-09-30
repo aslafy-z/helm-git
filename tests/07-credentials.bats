@@ -29,11 +29,11 @@ setup_file() {
     [[ "$output" == *"HELM_PLUGIN_USERNAME=unset"* ]]
     [[ "$output" == *"HELM_PLUGIN_PASSWORD=unset"* ]]
 
-    # Check that the internal HELM_GIT_* variables are set
-    run bash -c 'source "${HELM_GIT_DIRNAME}/helm-git-plugin.sh" && setup_git_credentials && echo "HELM_GIT_USERNAME=${HELM_GIT_USERNAME}" && echo "HELM_GIT_PASSWORD=${HELM_GIT_PASSWORD}"'
+    # Check that the internal HELM_GIT_* variables are NOT exported to child processes
+    run bash -c 'source "${HELM_GIT_DIRNAME}/helm-git-plugin.sh" && setup_git_credentials && bash -c "echo HELM_GIT_USERNAME=\${HELM_GIT_USERNAME:-unset}; echo HELM_GIT_PASSWORD=\${HELM_GIT_PASSWORD:-unset}"'
     [ $status = 0 ]
-    [[ "$output" == *"HELM_GIT_USERNAME=testuser"* ]]
-    [[ "$output" == *"HELM_GIT_PASSWORD=testpass"* ]]
+    [[ "$output" == *"HELM_GIT_USERNAME=unset"* ]]
+    [[ "$output" == *"HELM_GIT_PASSWORD=unset"* ]]
 }
 
 @test "should not setup git credentials when HELM_PLUGIN_USERNAME is missing" {
