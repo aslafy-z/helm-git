@@ -121,9 +121,7 @@ setup_git_credentials() {
   if [ -n "${HELM_PLUGIN_USERNAME:-}" ] && [ -n "${HELM_PLUGIN_PASSWORD:-}" ]; then
     debug "Setting up git credentials using Helm-provided username and password"
 
-    # Export credentials as environment variables for the credential helper
-    export GIT_USER="${HELM_PLUGIN_USERNAME}"
-    export GIT_PASSWORD="${HELM_PLUGIN_PASSWORD}"
+    # Mark that credentials are available for git_cmd
     export HELM_GIT_USE_CREDENTIALS="1"
 
     trace "Git credential helper configured with username: ${HELM_PLUGIN_USERNAME}"
@@ -137,7 +135,7 @@ setup_git_credentials() {
 git_cmd() {
   if [ "${HELM_GIT_USE_CREDENTIALS:-}" = "1" ]; then
     # shellcheck disable=SC2016
-    git -c credential.helper='!f() { echo "username=${GIT_USER}"; echo "password=${GIT_PASSWORD}"; }; f' "$@"
+    GIT_USER="${HELM_PLUGIN_USERNAME}" GIT_PASSWORD="${HELM_PLUGIN_PASSWORD}" git -c credential.helper='!f() { echo "username=${GIT_USER}"; echo "password=${GIT_PASSWORD}"; }; f' "$@"
   else
     git "$@"
   fi

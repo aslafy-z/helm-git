@@ -16,18 +16,18 @@ setup_file() {
     export HELM_PLUGIN_USERNAME="testuser"
     export HELM_PLUGIN_PASSWORD="testpass"
 
-    # Call setup_git_credentials function in a subshell to check exports
-    run bash -c 'source "${HELM_GIT_DIRNAME}/helm-git-plugin.sh" && setup_git_credentials && echo "GIT_USER=${GIT_USER}" && echo "GIT_PASSWORD=${GIT_PASSWORD}"'
-    [ $status = 0 ]
-
-    # Check that the output contains the expected values
-    [[ "$output" == *"GIT_USER=testuser"* ]]
-    [[ "$output" == *"GIT_PASSWORD=testpass"* ]]
-
-    # Check that HELM_GIT_USE_CREDENTIALS is set to enable git_cmd wrapper
+    # Call setup_git_credentials function to check that credentials flag is set
     run bash -c 'source "${HELM_GIT_DIRNAME}/helm-git-plugin.sh" && setup_git_credentials && echo "HELM_GIT_USE_CREDENTIALS=${HELM_GIT_USE_CREDENTIALS}"'
     [ $status = 0 ]
+
+    # Check that HELM_GIT_USE_CREDENTIALS is set to enable git_cmd wrapper
     [[ "$output" == *"HELM_GIT_USE_CREDENTIALS=1"* ]]
+
+    # Check that the global GIT_USER and GIT_PASSWORD are not set (they should not be exported globally)
+    run bash -c 'source "${HELM_GIT_DIRNAME}/helm-git-plugin.sh" && setup_git_credentials && echo "GIT_USER=${GIT_USER:-unset}" && echo "GIT_PASSWORD=${GIT_PASSWORD:-unset}"'
+    [ $status = 0 ]
+    [[ "$output" == *"GIT_USER=unset"* ]]
+    [[ "$output" == *"GIT_PASSWORD=unset"* ]]
 }
 
 @test "should not setup git credentials when HELM_PLUGIN_USERNAME is missing" {
@@ -39,12 +39,11 @@ setup_file() {
     export HELM_PLUGIN_PASSWORD="testpass"
 
     # Call setup_git_credentials function
-    run setup_git_credentials
+    run bash -c 'source "${HELM_GIT_DIRNAME}/helm-git-plugin.sh" && setup_git_credentials && echo "HELM_GIT_USE_CREDENTIALS=${HELM_GIT_USE_CREDENTIALS:-unset}"'
     [ $status = 0 ]
 
-    # Check that environment variables are not set
-    [ -z "${GIT_USER:-}" ]
-    [ -z "${GIT_PASSWORD:-}" ]
+    # Check that HELM_GIT_USE_CREDENTIALS is not set
+    [[ "$output" == *"HELM_GIT_USE_CREDENTIALS=unset"* ]]
 }
 
 @test "should not setup git credentials when HELM_PLUGIN_PASSWORD is missing" {
@@ -56,12 +55,11 @@ setup_file() {
     unset HELM_PLUGIN_PASSWORD
 
     # Call setup_git_credentials function
-    run setup_git_credentials
+    run bash -c 'source "${HELM_GIT_DIRNAME}/helm-git-plugin.sh" && setup_git_credentials && echo "HELM_GIT_USE_CREDENTIALS=${HELM_GIT_USE_CREDENTIALS:-unset}"'
     [ $status = 0 ]
 
-    # Check that environment variables are not set
-    [ -z "${GIT_USER:-}" ]
-    [ -z "${GIT_PASSWORD:-}" ]
+    # Check that HELM_GIT_USE_CREDENTIALS is not set
+    [[ "$output" == *"HELM_GIT_USE_CREDENTIALS=unset"* ]]
 }
 
 @test "should not setup git credentials when both are missing" {
@@ -73,12 +71,11 @@ setup_file() {
     unset HELM_PLUGIN_PASSWORD
 
     # Call setup_git_credentials function
-    run setup_git_credentials
+    run bash -c 'source "${HELM_GIT_DIRNAME}/helm-git-plugin.sh" && setup_git_credentials && echo "HELM_GIT_USE_CREDENTIALS=${HELM_GIT_USE_CREDENTIALS:-unset}"'
     [ $status = 0 ]
 
-    # Check that environment variables are not set
-    [ -z "${GIT_USER:-}" ]
-    [ -z "${GIT_PASSWORD:-}" ]
+    # Check that HELM_GIT_USE_CREDENTIALS is not set
+    [[ "$output" == *"HELM_GIT_USE_CREDENTIALS=unset"* ]]
 }
 
 @test "helm_git main should call setup_git_credentials with username and password" {
@@ -103,11 +100,12 @@ setup_file() {
 
     export HELM_PLUGIN_USERNAME="testuser"
     export HELM_PLUGIN_PASSWORD="testpass"
-    export GIT_USER="testuser"
-    export GIT_PASSWORD="testpass"
 
-    # Test the credential helper directly
-    run bash -c 'echo "username=${GIT_USER}"; echo "password=${GIT_PASSWORD}"'
+    # Test the credential helper by simulating what git_cmd does
+    run bash -c 'GIT_USER="testuser" GIT_PASSWORD="testpass" bash <<EOF
+echo "username=\${GIT_USER}"
+echo "password=\${GIT_PASSWORD}"
+EOF'
     [ $status = 0 ]
     [[ "$output" == *"username=testuser"* ]]
     [[ "$output" == *"password=testpass"* ]]
@@ -121,13 +119,21 @@ setup_file() {
     export HELM_PLUGIN_USERNAME="user@domain.com"
     export HELM_PLUGIN_PASSWORD="pass/with/special&chars"
 
-    # Call setup_git_credentials function in a subshell to check exports
-    run bash -c 'source "${HELM_GIT_DIRNAME}/helm-git-plugin.sh" && setup_git_credentials && echo "GIT_USER=${GIT_USER}" && echo "GIT_PASSWORD=${GIT_PASSWORD}"'
+    # Call setup_git_credentials function to verify it handles special characters
+    run bash -c 'source "${HELM_GIT_DIRNAME}/helm-git-plugin.sh" && setup_git_credentials && echo "HELM_GIT_USE_CREDENTIALS=${HELM_GIT_USE_CREDENTIALS}"'
     [ $status = 0 ]
 
-    # Check that the output contains the expected values with special characters
-    [[ "$output" == *"GIT_USER=user@domain.com"* ]]
-    [[ "$output" == *"GIT_PASSWORD=pass/with/special&chars"* ]]
+    # Check that HELM_GIT_USE_CREDENTIALS is set, meaning credentials were processed successfully
+    [[ "$output" == *"HELM_GIT_USE_CREDENTIALS=1"* ]]
+
+    # Test that the credential helper can handle special characters
+    run bash -c 'GIT_USER="user@domain.com" GIT_PASSWORD="pass/with/special&chars" bash <<EOF
+echo "username=\${GIT_USER}"
+echo "password=\${GIT_PASSWORD}"
+EOF'
+    [ $status = 0 ]
+    [[ "$output" == *"username=user@domain.com"* ]]
+    [[ "$output" == *"password=pass/with/special&chars"* ]]
 }
 
 @test "git_cmd should use credentials when available" {
