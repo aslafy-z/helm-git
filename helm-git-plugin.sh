@@ -124,18 +124,18 @@ git_fetch_ref() {
 # git_cmd(git_arguments...)
 # Execute git command with credential helper if credentials are available
 git_cmd() {
+  _ret=0
   if [ -n "${git_username:-}" ]; then
     trace "Git credential helper configured with username: ${git_username}"
     # shellcheck disable=SC2016
     GIT_USERNAME="${git_username}" GIT_PASSWORD="${git_password}" git -c credential.helper='!f() { echo "username=${GIT_USERNAME}"; echo "password=${GIT_PASSWORD}"; }; f' "$@"
-    ret=$?
+    _ret=$?
   else
     trace "No Helm plugin credentials found, using existing git authentication"
     git "$@"
-    ret=$?
+    _ret=$?
   fi
-
-  return $ret
+  return $_ret
 }
 
 #git_cache_intercept(git_repo, git_ref)
