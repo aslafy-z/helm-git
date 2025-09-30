@@ -123,10 +123,6 @@ git_cache_intercept() {
   repo_tokens=$(echo "${_git_repo}" | sed -E -e 's/[^/]+\/\/([^@]*@)?([^/]+)\/(.+)$/\2 \3/' -e 's/\.git$//g')
   repo_host=$(echo "${repo_tokens}" | cut -d " " -f1)
   repo_repo=$(echo "${repo_tokens}" | cut -d " " -f2)
-  if [ ! -d "${HELM_GIT_REPO_CACHE}" ]; then
-    debug "HELM_GIT_REPO_CACHE:${HELM_GIT_REPO_CACHE} is not a directory, cannot cache"
-    return 1
-  fi
 
   repo_path="${HELM_GIT_REPO_CACHE}/${repo_host}/${repo_repo}"
   debug "Calculated cache path for repo ${_git_repo} is ${repo_path}"
