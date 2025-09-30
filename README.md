@@ -18,7 +18,7 @@ This fits multiple use cases:
 
 Use `helm` CLI to install this plugin:
 
-    helm plugin install https://github.com/aslafy-z/helm-git --version 1.4.0
+    helm plugin install https://github.com/aslafy-z/helm-git --version 1.4.1
 
 To use the plugin, you only need `git`. If you want to build the plugin from source, or you want to contribute
 to the plugin, please see [these instructions](.github/CONTRIBUTING.md).
