@@ -49,7 +49,7 @@ setup_file() {
     [[ "$output" == *"git_username=empty"* ]]
 }
 
-@test "should not setup git credentials when HELM_PLUGIN_PASSWORD is missing" {
+@test "should setup git credentials with username only (empty password allowed)" {
     if ! helm_supports_credentials; then
         skip "Helm version < 3.14.0 does not support credential passing"
     fi
