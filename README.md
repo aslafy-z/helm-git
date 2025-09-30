@@ -114,8 +114,6 @@ helm repo add my-repo --username myuser --password mypass git+https://github.com
 helm fetch my-repo/my-chart
 ```
 
-This feature works with ArgoCD and other tools that pass credentials to Helm repositories using the standard `--username` and `--password` flags.
-
 **Note**: When both Helm credentials and existing git authentication (SSH keys, credential helpers) are available, Helm credentials take precedence for the current operation.
 
 ### Note on SSH relative paths
