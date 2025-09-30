@@ -23,11 +23,17 @@ setup_file() {
     # Check that HELM_GIT_USE_CREDENTIALS is set to enable git_cmd wrapper
     [[ "$output" == *"HELM_GIT_USE_CREDENTIALS=1"* ]]
 
-    # Check that the global GIT_USER and GIT_PASSWORD are not set (they should not be exported globally)
-    run bash -c 'source "${HELM_GIT_DIRNAME}/helm-git-plugin.sh" && setup_git_credentials && echo "GIT_USER=${GIT_USER:-unset}" && echo "GIT_PASSWORD=${GIT_PASSWORD:-unset}"'
+    # Check that the original HELM_PLUGIN_* variables are unset for security
+    run bash -c 'source "${HELM_GIT_DIRNAME}/helm-git-plugin.sh" && setup_git_credentials && echo "HELM_PLUGIN_USERNAME=${HELM_PLUGIN_USERNAME:-unset}" && echo "HELM_PLUGIN_PASSWORD=${HELM_PLUGIN_PASSWORD:-unset}"'
     [ $status = 0 ]
-    [[ "$output" == *"GIT_USER=unset"* ]]
-    [[ "$output" == *"GIT_PASSWORD=unset"* ]]
+    [[ "$output" == *"HELM_PLUGIN_USERNAME=unset"* ]]
+    [[ "$output" == *"HELM_PLUGIN_PASSWORD=unset"* ]]
+
+    # Check that the internal HELM_GIT_* variables are set
+    run bash -c 'source "${HELM_GIT_DIRNAME}/helm-git-plugin.sh" && setup_git_credentials && echo "HELM_GIT_USERNAME=${HELM_GIT_USERNAME}" && echo "HELM_GIT_PASSWORD=${HELM_GIT_PASSWORD}"'
+    [ $status = 0 ]
+    [[ "$output" == *"HELM_GIT_USERNAME=testuser"* ]]
+    [[ "$output" == *"HELM_GIT_PASSWORD=testpass"* ]]
 }
 
 @test "should not setup git credentials when HELM_PLUGIN_USERNAME is missing" {
