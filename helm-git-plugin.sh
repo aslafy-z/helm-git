@@ -101,12 +101,12 @@ warning() {
 git_cmd() {
   _ret=0
   if [ -n "${git_username:-}" ]; then
-    trace "[git, username:${git_username}] $@"
+    trace "[git, username:${git_username}] $*"
     # shellcheck disable=SC2016
     GIT_TERMINAL_PROMPT=0 GIT_USERNAME="${git_username}" GIT_PASSWORD="${git_password}" git -c credential.helper='!f() { echo "username=${GIT_USERNAME}"; echo "password=${GIT_PASSWORD}"; }; f' "$@"
     _ret=$?
   else
-    trace "[git] $@"
+    trace "[git] $*"
     GIT_TERMINAL_PROMPT=0 git "$@"
     _ret=$?
   fi
