@@ -92,7 +92,7 @@ setup_file() {
     run bash -c 'source "${HELM_GIT_DIRNAME}/helm-git-plugin.sh" && git_cmd --version 2>&1'
 
     # Check that the trace message about using credentials appears
-    [[ "$output" == *"Git credential helper configured with username: testuser"* ]]
+    [[ "$output" == *"[git, username:testuser] --version"* ]]
     [[ "$output" == *"git version"* ]]
 }
 
