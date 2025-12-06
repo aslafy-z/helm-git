@@ -5,6 +5,10 @@
 
 set -e
 
+# Resolve HELM_BIN to an absolute path
+HELM_BIN=$(readlink -f "$(command -v "$HELM_BIN")")
+export HELM_BIN
+
 # cd to helm-git plugin folder
 cd "$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd -P)" >&2
 
