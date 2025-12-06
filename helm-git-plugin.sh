@@ -400,6 +400,8 @@ parse_uri() {
 
 # main(cert_file, key_file, ca_file, raw_uri)
 main() {
+  trace "helm_bin: $HELM_BIN"
+
   trace "args: $*"
   helm_args="" # "$1 $2 $3"
   _raw_uri=$4  # eg: git+https://git.com/user/repo@path/to/charts/index.yaml?ref=master
