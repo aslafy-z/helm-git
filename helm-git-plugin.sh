@@ -8,10 +8,6 @@ set -eu
 # shellcheck disable=SC2034
 HELM_GIT_SOURCE=1
 
-# Resolve HELM_BIN to an absolute path
-HELM_BIN=$(cd "$OLDPWD" && readlink -f "$(command -v "$HELM_BIN")")
-readonly HELM_BIN
-
 bin_name="helm-git"
 readonly bin_name
 allowed_protocols="https http file ssh"
