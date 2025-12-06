@@ -96,11 +96,28 @@ warning() {
 
 ## Functions
 
+# git_cmd(git_arguments...)
+# Execute git command with credential helper if credentials are available
+git_cmd() {
+  _ret=0
+  if [ -n "${git_username:-}" ]; then
+    trace "[git, username:${git_username}] $@"
+    # shellcheck disable=SC2016
+    GIT_TERMINAL_PROMPT=0 GIT_USERNAME="${git_username}" GIT_PASSWORD="${git_password}" git -c credential.helper='!f() { echo "username=${GIT_USERNAME}"; echo "password=${GIT_PASSWORD}"; }; f' "$@"
+    _ret=$?
+  else
+    trace "[git] $@"
+    GIT_TERMINAL_PROMPT=0 git "$@"
+    _ret=$?
+  fi
+  return $_ret
+}
+
 # git_try(git_repo)
 git_try() {
   _git_repo=$1
 
-  GIT_TERMINAL_PROMPT=0 git_cmd ls-remote "$_git_repo" --refs >"${git_output}" 2>&1 || return 1
+  git_cmd ls-remote "$_git_repo" --refs >"${git_output}" 2>&1 || return 1
 }
 
 #git_get_default_branch(git_repo_path)
@@ -108,7 +125,7 @@ git_get_default_branch() {
   _git_repo="${1?Missing git_repo as first parameter}"
 
   # Fetch default branch from remote
-  _git_symref=$(GIT_TERMINAL_PROMPT=0 git_cmd ls-remote --symref "${_git_repo}" origin HEAD 2>"${git_output}") || return
+  _git_symref=$(git_cmd ls-remote --symref "${_git_repo}" origin HEAD 2>"${git_output}") || return
   echo "$_git_symref" | awk '/^ref:/ {sub(/refs\/heads\//, "", $2); print $2}' || return
 }
 
@@ -119,23 +136,6 @@ git_fetch_ref() {
 
   # Fetches any kind of ref to its right place, tags, annotated tags, branches and commit refs
   GIT_DIR="${_git_repo_path}" git_cmd fetch -u --depth=1 origin "refs/*/${_git_ref}:refs/*/${_git_ref}" "${_git_ref}" >"${git_output}" 2>&1
-}
-
-# git_cmd(git_arguments...)
-# Execute git command with credential helper if credentials are available
-git_cmd() {
-  _ret=0
-  if [ -n "${git_username:-}" ]; then
-    trace "Git credential helper configured with username: ${git_username}"
-    # shellcheck disable=SC2016
-    GIT_USERNAME="${git_username}" GIT_PASSWORD="${git_password}" git -c credential.helper='!f() { echo "username=${GIT_USERNAME}"; echo "password=${GIT_PASSWORD}"; }; f' "$@"
-    _ret=$?
-  else
-    trace "No Helm plugin credentials found, using existing git authentication"
-    git "$@"
-    _ret=$?
-  fi
-  return $_ret
 }
 
 #git_cache_intercept(git_repo, git_ref)
@@ -155,14 +155,14 @@ git_cache_intercept() {
     {
       mkdir -p "${repo_path}" &&
         cd "${repo_path}" &&
-        git init --bare ${git_quiet} >"${git_output}" 2>&1 &&
+        git_cmd init --bare ${git_quiet} >"${git_output}" 2>&1 &&
         git_cmd remote add origin "${_git_repo}" >"${git_output}" 2>&1
     } >&2 || debug "Could not setup ${_git_repo}" && return 1
   else
     debug "${_git_repo} exists in cache"
   fi
   debug "Making sure we have the requested ref #${_git_ref}"
-  if [ -z "$(GIT_DIR="${repo_path}" git tag -l "${_git_ref}" 2>"${git_output}")" ]; then
+  if [ -z "$(GIT_DIR="${repo_path}" git_cmd tag -l "${_git_ref}" 2>"${git_output}")" ]; then
     debug "Did not find ${_git_ref} in our cache for ${_git_repo}, fetching...."
     # This fetches properly tags, annotated tags, branches and commits that match the name and leave them at the right place
     git_fetch_ref "${repo_path}" "${_git_ref}" ||
@@ -191,18 +191,18 @@ git_checkout() {
 
   {
     cd "$_target_path"
-    git init ${git_quiet} >"${git_output}" 2>&1
-    git config pull.ff only >"${git_output}" 2>&1
+    git_cmd init ${git_quiet} >"${git_output}" 2>&1
+    git_cmd config pull.ff only >"${git_output}" 2>&1
     git_cmd remote add origin "$_git_repo" >"${git_output}" 2>&1
   }
   if [ "$_sparse" = "1" ] && [ -n "$_git_path" ]; then
-    git config core.sparseCheckout true >"${git_output}" 2>&1
+    git_cmd config core.sparseCheckout true >"${git_output}" 2>&1
     mkdir -p .git/info
     echo "$_git_path/*" >.git/info/sparse-checkout
   fi
   git_fetch_ref "${PWD}/.git" "${_git_ref}" ||
     error "Unable to fetch remote. Check your Git url."
-  git checkout ${git_quiet} "${_git_ref}" >"${git_output}" 2>&1 ||
+  git_cmd checkout ${git_quiet} "${_git_ref}" >"${git_output}" 2>&1 ||
     error "Unable to checkout ref. Check your Git ref ($_git_ref) and path ($_git_path)."
   # shellcheck disable=SC2010,SC2012
   if [ "$(ls -A | grep -v '^.git$' -c)" = "0" ]; then
