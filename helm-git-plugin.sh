@@ -460,8 +460,19 @@ main() {
   git_checkout "$git_sparse" "$git_root_path" "$git_repo" "$git_ref" "$helm_dir" ||
     error "Error while git_sparse_checkout"
 
+  # Check if requested file exists
   if [ -f "$helm_dir/$helm_file" ]; then
     cat "$helm_dir/$helm_file"
+  fi
+
+  # Give clear error if file or directory not found
+  if [ "$helm_file" != "index.yaml" ] && [ ! -f "$git_root_path/$helm_dir/$helm_file" ]; then
+    if [ -d "$git_root_path/$helm_dir" ]; then
+      files=$(cd "$git_root_path/$helm_dir" 2>/dev/null && ls -1 | head -5 | tr '\n' ' ' || echo none)
+      error "File not found: '$helm_file' in '$helm_dir/'. Available: $files"
+    else
+      error "Directory not found: '$helm_dir/'. Check git ref and path after @"
+    fi
     return
   fi
 
@@ -517,6 +528,15 @@ main() {
     done
   }
 
+  # Better error for no charts
+  if [ "$chart_search_count" -eq "0" ]; then
+    if [ -d "$git_root_path/$helm_dir" ]; then
+      ls=$(cd "$git_root_path/$helm_dir" && ls -1 | head -3 | tr '\n' ' ')
+      error "No Chart.yaml in '$helm_dir/'. Found: $ls"
+    else
+      error "Directory '$helm_dir/' not found"
+    fi
+  fi
   [ "$chart_search_count" -eq "0" ] &&
     error "No charts have been found"
 
