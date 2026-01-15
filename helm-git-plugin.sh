@@ -222,7 +222,9 @@ git_checkout() {
 
 # helm_v2()
 helm_v2() {
-  "$HELM_BIN" version -c --short | grep -q v2
+  # --client is ignored in v3
+  # '.Client.SemVer' fails > v2
+  "$HELM_BIN" version --client --template '{{.Client.SemVer}}' >/dev/null 2>&1
 }
 
 # helm_init(helm_home)
